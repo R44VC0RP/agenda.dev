@@ -13,6 +13,7 @@ import type { Todo, Comment } from "@/lib/types"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSession } from "@/lib/auth-client"
 import { convertOldTodoFormat } from "@/lib/utils"
+import PWAInstall from '@/components/pwa-install'
 
 const usePersistentState = <T,>(key: string, initialValue: T) => {
   const [value, setValue] = useState<T>(initialValue)
@@ -374,6 +375,7 @@ export default function Home() {
           )}
         </AnimatePresence>
       </motion.div>
+      <PWAInstall />
     </div>
   )
 }

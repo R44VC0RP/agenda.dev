@@ -6,8 +6,24 @@ import { Analytics } from "@vercel/analytics/react"
 import { PostHogProvider } from "@/components/PostHogProvider"
 
 export const metadata: Metadata = {
-  title: "exon todo",
-  description: "the simplest todo app",
+  title: "Todo App",
+  description: "A Progressive Web App for managing todos",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Todo App",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
 }
 
 export default function RootLayout({
