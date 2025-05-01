@@ -11,11 +11,17 @@ const config: Config = {
     extend: {
       animation: {
         "shine": "shine var(--duration) cubic-bezier(0.4, 0, 0.2, 1) infinite",
+        "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
       },
       keyframes: {
         shine: {
           "0%": { backgroundPosition: "150% 150%" },
           "100%": { backgroundPosition: "-50% -50%" },
+        },
+        "border-beam": {
+          "0%": { backgroundPosition: "0% 0%" },
+          "50%": { backgroundPosition: "100% 0%" },
+          "100%": { backgroundPosition: "0% 0%" },
         },
       },
       colors: {

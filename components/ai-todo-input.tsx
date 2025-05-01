@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid"
 import { ArrowRight, ChevronLeft, ChevronRight, Calendar, Clock, ArrowUp } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { IOSpinner } from "./spinner"
+import { BorderBeamMask } from "@/components/ui/border-beam-mask"
 
 interface Suggestion {
   type: "date" | "time" | "datetime"
@@ -293,7 +294,10 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
 
   return (
     <div className="mb-8">
-      <div className="bg-white dark:bg-[#131316] rounded-[12px] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0px_32px_64px_-16px_rgba(0,0,0,0.30)] dark:shadow-[0px_16px_32px_-8px_rgba(0,0,0,0.30)] dark:shadow-[0px_8px_16px_-4px_rgba(0,0,0,0.24)] dark:shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24)] dark:shadow-[0px_-8px_16px_-1px_rgba(0,0,0,0.16)] dark:shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.24)] dark:shadow-[0px_0px_0px_1px_rgba(0,0,0,1.00)] dark:shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] dark:shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.20)] overflow-hidden transition-colors duration-200 max-w-[600px] mx-auto">
+      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto">
+        <BorderBeamMask 
+          borderColor="rgba(124, 90, 255, 0.5)"
+        />
         <div className="p-5">
           {/* Current prompt - show at top when collecting details */}
           <AnimatePresence>

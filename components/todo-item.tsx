@@ -26,15 +26,15 @@ const getTimeColor = (dateStr: string) => {
   const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
   if (diffHours <= 0) {
-    return "text-red-500 dark:text-red-400"; // Overdue
+    return "text-red-600 dark:text-red-300"; // Overdue
   } else if (diffHours <= 6) {
-    return "text-yellow-600 dark:text-yellow-400"; // Very soon
+    return "text-yellow-600 dark:text-yellow-300"; // Very soon
   } else if (diffHours <= 24) {
-    return "text-yellow-500 dark:text-yellow-300"; // Within 24 hours
+    return "text-yellow-500 dark:text-yellow-200"; // Within 24 hours
   } else if (diffHours <= 72) {
-    return "text-green-500 dark:text-green-400"; // Within 3 days
+    return "text-green-600 dark:text-green-300"; // Within 3 days
   } else {
-    return "text-green-600 dark:text-green-500"; // More than 3 days
+    return "text-green-700 dark:text-green-400"; // More than 3 days
   }
 };
 
@@ -44,15 +44,15 @@ const getStatusStyle = (dateStr: string) => {
   const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
   if (diffHours <= 0) {
-    return "bg-gradient-to-r from-red-500/5 to-transparent dark:from-red-950/20 dark:to-transparent border-l-2 border-red-500/50 dark:border-red-500/30";
+    return "bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent dark:from-red-500/20 dark:via-red-500/10 dark:to-transparent border-l-2 border-red-500/60 dark:border-red-400/60";
   } else if (diffHours <= 6) {
-    return "bg-gradient-to-r from-yellow-500/5 to-transparent dark:from-yellow-900/20 dark:to-transparent border-l-2 border-yellow-500/40 dark:border-yellow-500/30";
+    return "bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent dark:from-yellow-500/20 dark:via-yellow-500/10 dark:to-transparent border-l-2 border-yellow-500/60 dark:border-yellow-400/60";
   } else if (diffHours <= 24) {
-    return "bg-gradient-to-r from-yellow-400/5 to-transparent dark:from-yellow-800/20 dark:to-transparent border-l-2 border-yellow-400/40 dark:border-yellow-400/20";
+    return "bg-gradient-to-r from-yellow-400/10 via-yellow-400/5 to-transparent dark:from-yellow-400/20 dark:via-yellow-400/10 dark:to-transparent border-l-2 border-yellow-400/60 dark:border-yellow-300/60";
   } else if (diffHours <= 72) {
-    return "bg-gradient-to-r from-green-400/5 to-transparent dark:from-green-900/20 dark:to-transparent border-l-2 border-green-400/40 dark:border-green-400/20";
+    return "bg-gradient-to-r from-green-400/10 via-green-400/5 to-transparent dark:from-green-400/20 dark:via-green-400/10 dark:to-transparent border-l-2 border-green-400/60 dark:border-green-300/60";
   } else {
-    return "bg-gradient-to-r from-green-500/5 to-transparent dark:from-green-950/20 dark:to-transparent border-l-2 border-green-500/30 dark:border-green-500/20";
+    return "bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent dark:from-green-500/20 dark:via-green-500/10 dark:to-transparent border-l-2 border-green-500/60 dark:border-green-400/60";
   }
 };
 
@@ -237,7 +237,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
   return (
     <div
       id={`todo-${todo.id}`}
-      className={`bg-white dark:bg-[#131316] rounded-[12px] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0px_32px_64px_-16px_rgba(0,0,0,0.30)] dark:shadow-[0px_16px_32px_-8px_rgba(0,0,0,0.30)] dark:shadow-[0px_8px_16px_-4px_rgba(0,0,0,0.24)] dark:shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24)] dark:shadow-[0px_-8px_16px_-1px_rgba(0,0,0,0.16)] dark:shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.24)] dark:shadow-[0px_0px_0px_1px_rgba(0,0,0,1.00)] dark:shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] dark:shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.20)] overflow-hidden transition-colors duration-200`}
+      className={`bg-white dark:bg-card rounded-[12px] shadow-card hover:shadow-card-hover border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-200 ${isHovered ? 'translate-y-[-1px]' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

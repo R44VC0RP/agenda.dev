@@ -643,7 +643,7 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
 
     return (
         <div className="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-[#09090B] text-gray-900 dark:text-white transition-colors duration-200">
-            <div className="fixed top-0 left-0 right-0 z-30 bg-gray-100 dark:bg-[#09090B] py-3 md:py-4 px-4 pt-safe flex-shrink-0">
+            <div className="fixed top-0 left-0 right-0 z-30 bg-gray-100 dark:bg-[#09090B] py-3 md:py-4 px-4 pt-safe flex-shrink-0" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
                 <div className="flex flex-row items-center justify-between w-full">
                     <div className="flex items-center">
                         <Image src="/logo.png" alt="agenda.dev" width={32} height={32} className="mr-2" />
@@ -786,19 +786,52 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
                         )}
                     </AnimatePresence>
                     
-                    {/* Desktop input removed - now shown only in modal with 'n' key */}
-                    <div className="hidden md:block fixed bottom-6 right-6">
-                        <button 
-                            onClick={() => setIsInputVisible(true)}
-                            className="bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] p-4 rounded-full shadow-lg hover:from-[#8f71ff] hover:to-[#7c5aff] transition-all duration-150"
-                            title="New Todo (Press 'n')"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
-                    </div>
+                    {/* Show input directly when no todos exist, and + button when todos exist */}
+                    <AnimatePresence mode="wait">
+                        {filteredTodos.length === 0 ? (
+                            <motion.div
+                                key="empty-state-input"
+                                className="flex-1 flex items-center justify-center"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ 
+                                    duration: 0.4, 
+                                    ease: [0.25, 0.1, 0.25, 1.0], // cubic-bezier easing
+                                    opacity: { duration: 0.5 }
+                                }}
+                            >
+                                <div className="w-full max-w-[600px] px-4">
+                                    <AITodoInput onAddTodo={addTodo} />
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="add-button"
+                                className="hidden md:block fixed bottom-6 right-6"
+                                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.5, y: 20 }}
+                                transition={{ 
+                                    type: "spring", 
+                                    stiffness: 350, 
+                                    damping: 25,
+                                    opacity: { duration: 0.3 }
+                                }}
+                            >
+                                <button 
+                                    onClick={() => setIsInputVisible(true)}
+                                    className="bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] p-4 rounded-full shadow-lg hover:from-[#8f71ff] hover:to-[#7c5aff] transition-all duration-300"
+                                    title="New Todo (Press 'n')"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </motion.div>
 

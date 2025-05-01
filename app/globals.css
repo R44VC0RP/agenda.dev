@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/fonts/OpenRunde-Regular.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/fonts/OpenRunde-Medium.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/fonts/OpenRunde-Semibold.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Semibold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/fonts/OpenRunde-Bold.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @keyframes highlight {
   0% {
     background-color: rgba(124, 90, 255, 0.2);
@@ -15,8 +51,29 @@
   animation: highlight 2s ease-out;
 }
 
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+/* Empty space where removed keyframes were */
+
+/* Remove focus outline from inputs to use BorderBeam instead */
+input:focus {
+  outline: none !important;
+}
+
+/* Remove any animation that's not needed anymore */
+
 body {
-  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+  font-family: "OpenRunde", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
     "Helvetica Neue", sans-serif;
   overscroll-behavior-y: none;
   padding-bottom: env(safe-area-inset-bottom);
@@ -36,10 +93,74 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Shadow utilities */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-xl {
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .shadow-inner {
+    box-shadow: var(--shadow-inner);
+  }
+  
+  .shadow-accent {
+    box-shadow: var(--shadow-accent);
+  }
+  
+  .dark .shadow-glow-sm {
+    box-shadow: var(--glow-sm);
+  }
+  
+  .dark .shadow-glow-md {
+    box-shadow: var(--glow-md);
+  }
+  
+  .dark .shadow-glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+  
+  /* Combined shadow effects */
+  .shadow-card {
+    @apply shadow-md;
+  }
+  
+  .dark .shadow-card {
+    box-shadow: var(--shadow-md), var(--glow-sm);
+  }
+  
+  .shadow-card-hover {
+    @apply shadow-lg transition-shadow duration-200;
+  }
+  
+  .dark .shadow-card-hover {
+    box-shadow: var(--shadow-lg), var(--glow-md);
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .shadow-button {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .dark .shadow-button {
+    box-shadow: var(--shadow-md), var(--glow-sm);
+  }
 }
 
 @layer base {
   :root {
+    /* Base colors */
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -65,6 +186,8 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    
+    /* Sidebar colors */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -73,40 +196,65 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Shadow values - light mode */
+    --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0px 2px 4px rgba(0, 0, 0, 0.06), 0px 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0px 4px 6px rgba(0, 0, 0, 0.05), 0px 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0px 10px 25px rgba(0, 0, 0, 0.1), 0px 15px 50px rgba(0, 0, 0, 0.08);
+    --shadow-inner: inset 0px 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-accent: 0px 4px 12px rgba(124, 90, 255, 0.25);
   }
+  
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    /* Base colors */
+    --background: 220 10% 4%;
+    --foreground: 210 5% 98%;
+    --card: 220 10% 5%;
+    --card-foreground: 210 5% 98%;
+    --popover: 220 10% 5%;
+    --popover-foreground: 210 5% 98%;
+    --primary: 210 5% 98%;
+    --primary-foreground: 220 10% 5%;
+    --secondary: 220 10% 10%;
+    --secondary-foreground: 210 5% 98%;
+    --muted: 220 10% 10%;
+    --muted-foreground: 210 5% 70%;
+    --accent: 220 10% 12%;
+    --accent-foreground: 210 5% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --destructive-foreground: 210 5% 98%;
+    --border: 220 10% 15%;
+    --input: 220 10% 12%;
+    --ring: 210 5% 84%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    
+    /* Sidebar colors */
+    --sidebar-background: 222 14% 12%;
+    --sidebar-foreground: 210 5% 96%;
+    --sidebar-primary: 224 76% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 220 12% 18%;
+    --sidebar-accent-foreground: 210 5% 96%;
+    --sidebar-border: 220 12% 18%;
+    --sidebar-ring: 217 91% 60%;
+    
+    /* Shadow values - dark mode */
+    --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.4), 0px 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0px 2px 4px rgba(0, 0, 0, 0.4), 0px 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0px 8px 16px rgba(0, 0, 0, 0.5), 0px 16px 32px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0px 16px 24px rgba(0, 0, 0, 0.5), 0px 24px 32px rgba(0, 0, 0, 0.4);
+    --shadow-inner: inset 0px 1px 4px rgba(0, 0, 0, 0.6), inset 0px 0px 2px rgba(255, 255, 255, 0.1);
+    --shadow-accent: 0px 4px 16px rgba(124, 90, 255, 0.3), 0px 2px 8px rgba(124, 90, 255, 0.2);
+    
+    /* Glow effects */
+    --glow-sm: 0px 0px 4px rgba(255, 255, 255, 0.05);
+    --glow-md: 0px 0px 8px rgba(255, 255, 255, 0.08);
+    --glow-accent: 0px 0px 12px rgba(124, 90, 255, 0.25);
   }
   .theme {
     --animate-shine: shine var(--duration) infinite linear;
