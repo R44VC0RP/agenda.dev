@@ -58,6 +58,7 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
     const [currentWorkspace, setCurrentWorkspace] = usePersistentState<string>('currentWorkspace', 'personal')
     const [isNewWorkspaceDialogOpen, setIsNewWorkspaceDialogOpen] = useState(false)
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+    const [isInputVisible, setIsInputVisible] = useState(false)
     const { data: session } = useSession()
 
     // Initialize user settings on first load: if no DB record exists, seed with defaults (browser timezone)
@@ -106,9 +107,10 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
         }
     }, [session?.user, setTodos, setCurrentWorkspace])
 
-    // Add keyboard shortcut handler for workspace switching
+    // Add keyboard shortcut handlers for workspace switching and input visibility
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Handle workspace switching with Ctrl+Cmd+[number]
             if (e.ctrlKey && e.metaKey && !e.altKey && !e.shiftKey) {
                 const num = parseInt(e.key)
                 if (!isNaN(num) && num >= 1 && num <= 9) {
@@ -121,13 +123,28 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
                     }
                 }
             }
+            
+            // Handle 'n' key to show the input dialog
+            if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+                // Only trigger if not in an input or textarea
+                if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                    e.preventDefault()
+                    setIsInputVisible(true)
+                }
+            }
+            
+            // Handle Escape key to hide the input dialog
+            if (e.key === 'Escape' && isInputVisible) {
+                e.preventDefault()
+                setIsInputVisible(false)
+            }
         }
 
         document.addEventListener('keydown', handleKeyDown)
         return () => {
             document.removeEventListener('keydown', handleKeyDown)
         }
-    }, [workspaces, setCurrentWorkspace, currentWorkspace])
+    }, [workspaces, setCurrentWorkspace, currentWorkspace, isInputVisible])
 
     // Sync with server if logged in
     useEffect(() => {
@@ -267,8 +284,8 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
             workspaceId: currentWorkspace,
         }
 
-        // Optimistic update
-        setTodos(prev => [...prev, newTodo])
+        // Optimistic update - add to the beginning of the array
+        setTodos(prev => [newTodo, ...prev])
 
         if (session?.user) {
             try {
@@ -625,66 +642,164 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-[#09090B] text-gray-900 dark:text-white p-4 transition-colors duration-200">
-            <div className="flex flex-row items-center justify-left">
-                <Image src="/logo.png" alt="agenda.dev" width={32} height={32} className="mr-2" />
-                <h1 className="text-xl">agenda.dev</h1>
-            </div>
-            <div className="relative mx-auto mb-4 flex items-center space-x-2 justify-center md:absolute md:top-4 md:right-4 md:mb-0 md:mx-0 md:justify-start">
-                {session?.user && (
-                    <WorkspaceSwitcher
-                        workspaces={workspaces}
-                        currentWorkspace={currentWorkspace}
-                        onSwitch={setCurrentWorkspace}
-                        onCreateNew={() => setIsNewWorkspaceDialogOpen(true)}
-                        onDelete={deleteWorkspace}
-                        todos={todos}
-                    />
-                )}
-                <CompletedToggle showCompleted={showCompleted} setShowCompleted={setShowCompleted} />
-                <ViewToggle isTableView={isTableView} setIsTableView={setIsTableView} />
-                <ThemeToggle />
-                <FeedbackWidget />
-                <LoginButton />
+        <div className="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-[#09090B] text-gray-900 dark:text-white transition-colors duration-200">
+            <div className="fixed top-0 left-0 right-0 z-30 bg-gray-100 dark:bg-[#09090B] py-3 md:py-4 px-4 pt-safe flex-shrink-0">
+                <div className="flex flex-row items-center justify-between w-full">
+                    <div className="flex items-center">
+                        <Image src="/logo.png" alt="agenda.dev" width={32} height={32} className="mr-2" />
+                        <h1 className="text-xl">agenda.dev</h1>
+                    </div>
+                    <div className="flex items-center space-x-1 md:space-x-2">
+                        {session?.user && (
+                            <WorkspaceSwitcher
+                                workspaces={workspaces}
+                                currentWorkspace={currentWorkspace}
+                                onSwitch={setCurrentWorkspace}
+                                onCreateNew={() => setIsNewWorkspaceDialogOpen(true)}
+                                onDelete={deleteWorkspace}
+                                todos={todos}
+                            />
+                        )}
+                        <CompletedToggle showCompleted={showCompleted} setShowCompleted={setShowCompleted} />
+                        <ViewToggle isTableView={isTableView} setIsTableView={setIsTableView} />
+                        <ThemeToggle />
+                        <FeedbackWidget />
+                        <LoginButton />
+                    </div>
+                </div>
             </div>
 
             <motion.div
                 layout
-                className="flex-1 flex flex-col w-full max-w-[1200px] mx-auto"
+                className="flex-1 flex flex-col w-full max-w-[1200px] mx-auto mt-16 md:mt-20 px-4"
                 transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-                <motion.div
-                    initial={false}
-                    className="w-full mt-1 md:mt-12"
-                >
-                    <motion.div
-                        initial={false}
-                        className="w-full sticky top-4 z-10 mb-8"
-                    >
-                        <AITodoInput onAddTodo={addTodo} />
-                    </motion.div>
-                </motion.div>
-
-                <AnimatePresence mode="popLayout">
-                    {filteredTodos.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <TodoList
-                                todos={filteredTodos}
-                                onToggle={toggleTodo}
-                                onDelete={deleteTodo}
-                                onAddComment={addComment}
-                                onDeleteComment={deleteComment}
-                                onReschedule={rescheduleTodo}
-                                onDragEnd={handleDragEnd}
+                {/* Input Modal - Shown when 'n' key is pressed */}
+                <AnimatePresence>
+                    {isInputVisible && (
+                        <>
+                            <motion.div 
+                                className="fixed inset-0 bg-black/20 backdrop-blur-md z-40"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsInputVisible(false)}
                             />
-                        </motion.div>
+                            <motion.div 
+                                className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center z-50 p-4"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <motion.div
+                                    className="w-full max-w-[600px]"
+                                    initial={{ scale: 0.8, y: 20 }}
+                                    animate={{ scale: 1, y: 0 }}
+                                    exit={{ scale: 0.8, y: 20 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                >
+                                    <AITodoInput 
+                                        onAddTodo={(todo) => {
+                                            addTodo(todo);
+                                            setIsInputVisible(false);
+                                        }} 
+                                    />
+                                </motion.div>
+                            </motion.div>
+                        </>
                     )}
                 </AnimatePresence>
+                {/* On mobile, different layouts based on if there are todos */}
+                <div className="flex flex-col h-full md:hidden">
+                    {filteredTodos.length > 0 ? (
+                        <>
+                            {/* With todos: list scrolls, input stays at bottom */}
+                            <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "160px" }}>
+                                <AnimatePresence mode="popLayout">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <TodoList
+                                            todos={filteredTodos}
+                                            onToggle={toggleTodo}
+                                            onDelete={deleteTodo}
+                                            onAddComment={addComment}
+                                            onDeleteComment={deleteComment}
+                                            onReschedule={rescheduleTodo}
+                                            onDragEnd={handleDragEnd}
+                                        />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                            
+                            <div className="fixed bottom-0 left-0 right-0 px-4 py-4 bg-gray-100 dark:bg-[#09090B] z-20 ios-keyboard-support">
+                                <AITodoInput onAddTodo={addTodo} />
+                            </div>
+                        </>
+                    ) : (
+                        // No todos: position at bottom on mobile
+                        <div className="flex-1 flex flex-col justify-end">
+                            <div className="fixed bottom-0 left-0 right-0 px-4 py-4 bg-gray-100 dark:bg-[#09090B] z-20 ios-keyboard-support">
+                                <AITodoInput onAddTodo={addTodo} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+                
+                {/* On desktop, centered vertically when empty, input at bottom when todos exist */}
+                <div className="hidden md:flex flex-col h-full overflow-hidden relative">
+                    {/* Todo list appears when there are todos */}
+                    <AnimatePresence>
+                        {filteredTodos.length > 0 && (
+                            <motion.div
+                                className="flex-1 overflow-hidden w-full"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                style={{ paddingBottom: "80px" }}
+                            >
+                                <div className="h-full overflow-y-auto w-full max-w-[1000px] mx-auto">
+                                    <AnimatePresence mode="popLayout">
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <TodoList
+                                                todos={filteredTodos}
+                                                onToggle={toggleTodo}
+                                                onDelete={deleteTodo}
+                                                onAddComment={addComment}
+                                                onDeleteComment={deleteComment}
+                                                onReschedule={rescheduleTodo}
+                                                onDragEnd={handleDragEnd}
+                                            />
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    
+                    {/* Desktop input removed - now shown only in modal with 'n' key */}
+                    <div className="hidden md:block fixed bottom-6 right-6">
+                        <button 
+                            onClick={() => setIsInputVisible(true)}
+                            className="bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] p-4 rounded-full shadow-lg hover:from-[#8f71ff] hover:to-[#7c5aff] transition-all duration-150"
+                            title="New Todo (Press 'n')"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </motion.div>
 
             {session?.user && (

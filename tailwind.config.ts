@@ -61,7 +61,20 @@ const config: Config = {
     },
   },
   darkMode: ["class"],
-  plugins: [animatePlugin],
+  plugins: [
+    animatePlugin,
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.mb-safe-keyboard': {
+          'padding-bottom': 'env(safe-area-inset-bottom)',
+        },
+        '.pt-safe': {
+          'padding-top': 'env(safe-area-inset-top)',
+        },
+      }
+      addUtilities(newUtilities)
+    },
+  ],
 }
 
 export default config
