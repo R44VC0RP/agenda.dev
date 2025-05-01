@@ -9,7 +9,7 @@ interface BorderBeamMaskProps {
 
 export const BorderBeamMask = ({
   className,
-  borderColor = "rgba(124, 90, 255, 0.5)",
+  borderColor = "rgb(124, 90, 255)",
 }: BorderBeamMaskProps) => {
   return (
     <div
@@ -18,7 +18,7 @@ export const BorderBeamMask = ({
         className
       )}
       style={{
-        boxShadow: `0 0 0 1px ${borderColor}`,
+        boxShadow: `inset 0 0 0 1px ${borderColor}`,
       }}
     />
   )

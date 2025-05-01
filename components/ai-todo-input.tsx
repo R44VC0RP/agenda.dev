@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid"
 import { ArrowRight, ChevronLeft, ChevronRight, Calendar, Clock, ArrowUp } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
 import { IOSpinner } from "./spinner"
-import { BorderBeamMask } from "@/components/ui/border-beam-mask"
+import { AnimatedBorder } from "@/components/ui/animated-border"
 
 interface Suggestion {
   type: "date" | "time" | "datetime"
@@ -294,9 +294,10 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
 
   return (
     <div className="mb-8">
-      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto">
-        <BorderBeamMask 
-          borderColor="rgba(124, 90, 255, 0.5)"
+      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group">
+        <AnimatedBorder 
+          solidColor="rgb(124, 90, 255)"
+          gradientColors="rgb(124, 90, 255), rgb(70, 174, 206), rgb(124, 90, 255)"
         />
         <div className="p-5">
           {/* Current prompt - show at top when collecting details */}

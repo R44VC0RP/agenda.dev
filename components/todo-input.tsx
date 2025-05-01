@@ -8,7 +8,7 @@ import { convertRelativeDate } from "@/lib/date-utils"
 import { IOSpinner } from "./spinner"
 import { ArrowRight } from "lucide-react"
 import { useSession } from "@/lib/auth-client"
-import { BorderBeamMask } from "@/components/ui/border-beam-mask"
+import { AnimatedBorder } from "@/components/ui/animated-border"
 
 type InputStep = "text" | "date" | "urgency"
 
@@ -122,9 +122,10 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
 
   return (
     <div className="mb-8">
-      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto">
-        <BorderBeamMask 
-          borderColor="rgba(124, 90, 255, 0.5)"
+      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group">
+        <AnimatedBorder 
+          solidColor="rgb(124, 90, 255)"
+          gradientColors="rgb(124, 90, 255), rgb(70, 174, 206), rgb(124, 90, 255)"
         />
         <div className="p-5">
           <div className="flex items-center justify-center gap-2">
