@@ -26,10 +26,15 @@ export default function DesktopApp() {
     }
   }, [isTauri]);
 
-  // Setup redirect effect for non-Tauri environments
+  // For desktop builds, always assume we're in Tauri
+  // The app is built specifically for desktop in this case
   useEffect(() => {
-    // Don't redirect in dev mode or if we're in Tauri
-    if (!isTauri && process.env.NODE_ENV !== 'development') {
+    // In dev or if specifically not a desktop build, redirect
+    if (
+      !isTauri &&
+      process.env.NODE_ENV !== 'development' &&
+      process.env.NEXT_PUBLIC_IS_DESKTOP !== 'true'
+    ) {
       window.location.href = '/';
     }
   }, [isTauri]);

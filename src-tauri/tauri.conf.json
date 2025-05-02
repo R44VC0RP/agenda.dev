@@ -7,7 +7,7 @@
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000/desktop",
     "beforeDevCommand": "bun dev",
-    "beforeBuildCommand": "bun run build:desktop"
+    "beforeBuildCommand": ""
   },
   "app": {
     "windows": [

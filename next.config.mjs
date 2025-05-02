@@ -14,6 +14,7 @@ const nextConfig = {
 
   // Use a different output directory for Tauri builds
   distDir: process.env.TAURI_ENABLED === 'true' ? 'out' : '.next',
+  
   // Web-only features
   ...(process.env.TAURI_ENABLED !== 'true'
     ? {
@@ -36,18 +37,27 @@ const nextConfig = {
       }
     : {
         // Desktop-only settings
-        // Exclude Route Handler files from the desktop bundle
-        // They have the same extensions but live in `/app/api/**`, so disable them via
-        // the experimental flag instead of pageExtensions.
-        experimental: {
-          disableGloballyConfiguredRouteHolders: true, // Next 14 nightly; fallback below
-        },
-        // Fallback for stable releases: ignore the directory at build time
-        webpack(cfg) {
+        // For static export, exclude dynamic routes
+        trailingSlash: true,
+      
+        // Exclude specific pages from the build
+        pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+        
+        // Configure webpack for desktop build
+        webpack(config) {
           if (process.env.TAURI_ENABLED === 'true') {
-            cfg.externalsPresets = { ...cfg.externalsPresets, node: false };
+            // Configure Node.js polyfills
+            config.resolve.alias = {
+              ...(config.resolve.alias || {}),
+              'node:buffer': 'buffer',
+              'node:crypto': 'crypto-browserify',
+              'node:events': 'events',
+              'node:http': 'stream-http',
+              'node:https': 'https-browserify',
+              'node:stream': 'stream-browserify',
+            };
           }
-          return cfg;
+          return config;
         },
       }),
 

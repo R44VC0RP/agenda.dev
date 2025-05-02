@@ -5,9 +5,16 @@ set -e
 
 echo "Building Tauri app..."
 
-# Create a minimal HTML file for the frontend
-mkdir -p out
-cat > out/index.html << 'EOL'
+# Run the custom desktop build script
+echo "Building Next.js desktop app..."
+chmod +x desktop-build.js
+./desktop-build.js
+
+# If Next.js build fails, create a minimal fallback HTML file
+if [ $? -ne 0 ]; then
+  echo "Next.js build failed. Creating minimal fallback HTML..."
+  mkdir -p out/desktop
+  cat > out/index.html << 'EOL'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,12 +50,38 @@ cat > out/index.html << 'EOL'
 </body>
 </html>
 EOL
+  cp out/index.html out/desktop/index.html
+fi
 
-# Create desktop directory and files
-mkdir -p out/desktop
-cp out/index.html out/desktop/index.html
+# Make sure we have an index.html in the out directory
+if [ ! -f "out/index.html" ]; then
+  echo "Creating/copying index.html to root of out directory..."
+  if [ -f "out/desktop.html" ]; then
+    # Use desktop.html if it exists
+    cp out/desktop.html out/index.html
+  elif [ -f "out/desktop/index.html" ]; then
+    # Use desktop/index.html if it exists
+    cp out/desktop/index.html out/index.html
+  else
+    # Create a minimal fallback if nothing exists
+    cat > out/index.html << 'EOL'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0;URL='./desktop'" />
+  <title>Agenda Desktop</title>
+</head>
+<body>
+  <p>Redirecting to desktop app...</p>
+</body>
+</html>
+EOL
+  fi
+fi
 
-# Skip the Next.js build step entirely and build directly with Cargo
+# Build directly with Cargo
 echo "Building Tauri with Cargo directly..."
 cd src-tauri
 cargo build --release
@@ -72,8 +105,7 @@ if ! command -v cargo tauri &> /dev/null; then
 fi
 
 # Create bundle using Tauri's built-in bundler (works cross-platform)
-# This handles proper app signing, entitlements, and platform-specific requirements
-cargo tauri build
+cargo tauri build --config src-tauri/tauri.conf.json
 
 # The bundled app will be available at:
 # - macOS: src-tauri/target/release/bundle/macos/Agenda.app
