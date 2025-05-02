@@ -9,7 +9,16 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Required for Tauri static export
+  output: process.env.TAURI_ENABLED === 'true' ? 'export' : undefined,
+  // Prevent conflicts with Tauri
+  distDir: process.env.TAURI_ENABLED === 'true' ? '.next' : 'out',
   async rewrites() {
+    // Skip rewrites in Tauri build since they're not supported with static export
+    if (process.env.TAURI_ENABLED === 'true') {
+      return [];
+    }
+    
     return [
       {
         source: '/ingest/static/:path*',
