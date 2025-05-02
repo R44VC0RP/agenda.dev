@@ -31,7 +31,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers: {
       ...options.headers,
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
@@ -54,7 +54,9 @@ export async function fetchTodos(): Promise<Todo[]> {
   return data as Todo[];
 }
 
-export async function createTodo(todo: Omit<Todo, "id" | "createdAt" | "updatedAt" | "userId" | "comments">): Promise<Todo> {
+export async function createTodo(
+  todo: Omit<Todo, "id" | "createdAt" | "updatedAt" | "userId" | "comments">,
+): Promise<Todo> {
   const response = await fetchWithAuth("/todos", {
     method: "POST",
     body: JSON.stringify(todo),
@@ -96,4 +98,4 @@ export async function login(email: string, password: string): Promise<AuthSessio
   const session = data as AuthSession;
   await setAuthSession(session);
   return session;
-} 
+}

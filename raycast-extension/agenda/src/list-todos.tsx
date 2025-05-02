@@ -84,10 +84,7 @@ export default function Command() {
           icon={todo.completed ? Icon.Checkmark : Icon.Circle}
           title={todo.title}
           subtitle={todo.dueDate}
-          accessories={[
-            { text: `Urgency: ${todo.urgency}` },
-            { icon: todo.completed ? Icon.Checkmark : undefined },
-          ]}
+          accessories={[{ text: `Urgency: ${todo.urgency}` }, { icon: todo.completed ? Icon.Checkmark : undefined }]}
           actions={
             <ActionPanel>
               <ActionPanel.Section>
@@ -121,11 +118,7 @@ function AddTodoView({ onTodoCreated }: { onTodoCreated: () => void }) {
   const [titleError, setTitleError] = useState<string | undefined>();
   const [urgencyError, setUrgencyError] = useState<string | undefined>();
 
-  async function handleSubmit(values: {
-    title: string;
-    dueDate: string;
-    urgency: string;
-  }) {
+  async function handleSubmit(values: { title: string; dueDate: string; urgency: string }) {
     if (!values.title.trim()) {
       setTitleError("Title is required");
       return;
@@ -181,11 +174,7 @@ function AddTodoView({ onTodoCreated }: { onTodoCreated: () => void }) {
         error={titleError}
         onChange={() => setTitleError(undefined)}
       />
-      <Form.TextField
-        id="dueDate"
-        title="Due Date"
-        placeholder="tomorrow, next week, etc."
-      />
+      <Form.TextField id="dueDate" title="Due Date" placeholder="tomorrow, next week, etc." />
       <Form.TextField
         id="urgency"
         title="Urgency (1-5)"
@@ -196,4 +185,4 @@ function AddTodoView({ onTodoCreated }: { onTodoCreated: () => void }) {
       />
     </Form>
   );
-} 
+}

@@ -9,37 +9,48 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  
-  // For desktop app, we need to use static export
+  // For the desktop build we switch to static export mode
   output: process.env.TAURI_ENABLED === 'true' ? 'export' : undefined,
-  
-  // Next will use a different output directory for Tauri builds
+
+  // Use a different output directory for Tauri builds
   distDir: process.env.TAURI_ENABLED === 'true' ? 'out' : '.next',
-  
   // Web-only features
-  ...(process.env.TAURI_ENABLED !== 'true' ? {
-    async rewrites() {
-      return [
-        {
-          source: '/ingest/static/:path*',
-          destination: 'https://us-assets.i.posthog.com/static/:path*',
+  ...(process.env.TAURI_ENABLED !== 'true'
+    ? {
+        async rewrites() {
+          return [
+            {
+              source: '/ingest/static/:path*',
+              destination: 'https://us-assets.i.posthog.com/static/:path*',
+            },
+            {
+              source: '/ingest/:path*',
+              destination: 'https://us.i.posthog.com/:path*',
+            },
+            {
+              source: '/ingest/decide',
+              destination: 'https://us.i.posthog.com/decide',
+            },
+          ];
         },
-        {
-          source: '/ingest/:path*',
-          destination: 'https://us.i.posthog.com/:path*',
+      }
+    : {
+        // Desktop-only settings
+        // Exclude Route Handler files from the desktop bundle
+        // They have the same extensions but live in `/app/api/**`, so disable them via
+        // the experimental flag instead of pageExtensions.
+        experimental: {
+          disableGloballyConfiguredRouteHolders: true, // Next 14 nightly; fallback below
         },
-        {
-          source: '/ingest/decide',
-          destination: 'https://us.i.posthog.com/decide',
+        // Fallback for stable releases: ignore the directory at build time
+        webpack(cfg) {
+          if (process.env.TAURI_ENABLED === 'true') {
+            cfg.externalsPresets = { ...cfg.externalsPresets, node: false };
+          }
+          return cfg;
         },
-      ];
-    },
-  } : {
-    // Desktop-only settings
-    // Turn off generating all API routes for the desktop build
-    pageExtensions: ['js', 'jsx', 'ts', 'tsx'].filter(ext => ext !== 'api'),
-  }),
-  
+      }),
+
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
 };

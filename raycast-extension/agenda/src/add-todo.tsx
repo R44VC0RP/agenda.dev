@@ -9,11 +9,7 @@ export default function Command() {
   const [titleError, setTitleError] = useState<string | undefined>();
   const [urgencyError, setUrgencyError] = useState<string | undefined>();
 
-  async function handleSubmit(values: { 
-    title: string; 
-    dueDate: string;
-    urgency: string;
-  }) {
+  async function handleSubmit(values: { title: string; dueDate: string; urgency: string }) {
     if (!values.title.trim()) {
       setTitleError("Title is required");
       return;
@@ -68,11 +64,7 @@ export default function Command() {
         error={titleError}
         onChange={() => setTitleError(undefined)}
       />
-      <Form.TextField
-        id="dueDate"
-        title="Due Date"
-        placeholder="tomorrow, next week, etc."
-      />
+      <Form.TextField id="dueDate" title="Due Date" placeholder="tomorrow, next week, etc." />
       <Form.TextField
         id="urgency"
         title="Urgency (1-5)"
