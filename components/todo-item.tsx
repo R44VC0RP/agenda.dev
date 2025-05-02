@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, type KeyboardEvent, useEffect } from "react"
-import { Trash2, ChevronDown, ChevronUp, MessageSquare, User, ArrowRight, RotateCcw, Check } from "lucide-react"
+import { useState, useRef, type KeyboardEvent, useEffect, useLayoutEffect } from "react"
+import { Trash2, ChevronDown, ChevronUp, ChevronRight, MessageSquare, User, ArrowRight, RotateCcw, Check } from "lucide-react"
 import type { Todo, Comment } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { v4 as uuidv4 } from "uuid"
@@ -101,6 +101,44 @@ const formatCommentDate = (dateInput: Date | string) => {
   return formatDate(date.toISOString());
 };
 
+// Animation hook that calculates content height for smoother animations
+const useExpandableAnimation = (isOpen: boolean, ref: React.RefObject<HTMLDivElement>) => {
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    // Function to calculate and set height
+    const updateHeight = () => {
+      // First remove any height constraints
+      element.style.height = 'auto';
+      element.style.position = 'absolute';
+      element.style.visibility = 'hidden';
+      element.style.display = 'block';
+      
+      // Get the natural content height
+      const contentHeight = element.scrollHeight + 16; // Add extra padding
+      
+      // Reset element
+      element.style.position = '';
+      element.style.visibility = '';
+      element.style.display = '';
+      
+      // Set the variable for animation to use
+      element.style.setProperty('--auto-height', `${contentHeight}px`);
+      
+      return contentHeight;
+    };
+    
+    if (isOpen) {
+      // Let the browser calculate the real content height
+      requestAnimationFrame(() => {
+        updateHeight();
+        // Height is now properly set for the animation
+      });
+    }
+  }, [isOpen, ref]);
+};
+
 // Add new helper function to detect reminder commands
 const detectReminderCommand = (text: string): { isCommand: boolean; command: string | null } => {
   const reminderRegex = /^(!remindme|!rmd)\s/i;
@@ -152,9 +190,13 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false)
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
+  const expandedContentRef = useRef<HTMLDivElement>(null)
   const [isReminderCommand, setIsReminderCommand] = useState(false);
   const [reminderCommandType, setReminderCommandType] = useState<string | null>(null);
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
+  
+  // Use our animation hook
+  useExpandableAnimation(isExpanded, expandedContentRef);
 
   const handleReminderCommand = async (text: string) => {
     setIsProcessingReminder(true);
@@ -233,12 +275,13 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
   };
 
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded)
-    // Focus the comment input when expanding
+    setIsExpanded(!isExpanded);
+    
+    // Focus the comment input when expanding after animation completes
     if (!isExpanded) {
       setTimeout(() => {
-        commentInputRef.current?.focus()
-      }, 100)
+        commentInputRef.current?.focus();
+      }, 250);
     }
   }
 
@@ -266,7 +309,10 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
           ? '0 8px 20px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.05)' 
           : '0 1px 3px -1px rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.02)',
         transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-        margin: '2px 4px 4px 4px'
+        margin: '2px 4px 4px 4px',
+        transformStyle: 'preserve-3d',
+        backfaceVisibility: 'hidden',
+        perspective: '1000px'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -377,11 +423,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                       </button>
                     )}
 
-                    {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400 dark:text-white/50" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400 dark:text-white/50" />
-                    )}
+                    <ChevronRight className={`w-4 h-4 text-gray-400 dark:text-white/50 chevron-rotate ${isExpanded ? 'open' : ''}`} />
                   </div>
                 </div>
 
@@ -411,9 +453,9 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
           </div>
         </div>
 
-        {isExpanded && (
-          <div
-            className="border-t border-gray-200 dark:border-white/10 overflow-hidden relative rounded-b-[12px] transition-all duration-200"
+        <div
+            ref={expandedContentRef}
+            className={`relative rounded-b-[12px] expand-content ${isExpanded ? 'open' : ''}`}
           >
             {isReminderCommand && !isProcessingReminder && (
               <ShineBorder 
@@ -431,19 +473,21 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                 <div className="w-5 h-5 border-2 border-[#7c5aff] border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
-            <div className="p-4">
-              {/* Comments list */}
-              {todo.comments.length > 0 && (
-                <div className="mb-4 space-y-2">
-                  {todo.comments.map((comment) => (
+            {isExpanded && (
+              <div className="pt-3 pb-2 px-4">
+                {/* Comments list */}
+                {todo.comments.length > 0 && (
+                  <div className="mb-3 space-y-3 animate-in fade-in duration-200">
+                    {todo.comments.map((comment, index) => (
                     <div
                       key={comment.id}
                       onMouseEnter={() => setHoveredCommentId(comment.id)}
                       onMouseLeave={() => setHoveredCommentId(null)}
-                      className="group"
+                      className="group animate-in fade-in duration-200"
+                      style={{ animationDelay: `${index * 30}ms` }}
                     >
                       <div className="flex items-start gap-2">
-                        <div className="flex-shrink-0 mt-0.5">
+                        <div className="flex-shrink-0 mt-1.5">
                           <User className="w-4 h-4 text-gray-400 dark:text-white/40" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -490,8 +534,8 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
               )}
 
               {/* Add comment input */}
-              <div className="flex items-start gap-2">
-                <div className="flex-shrink-0 mt-0.5">
+              <div className="flex items-start gap-3 pt-1">
+                <div className="flex-shrink-0 pt-0.5">
                   <User className="w-4 h-4 text-gray-400 dark:text-white/40" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -502,34 +546,37 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                     onKeyDown={handleAddComment}
                     placeholder={session?.user ? "Add a comment... (Use !remindme or !rmd for reminders)" : "Add a comment..."}
                     rows={1}
-                    className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 text-[15px] transition-colors duration-200 resize-none overflow-hidden min-h-[24px] py-0"
+                    className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 text-[15px] transition-colors duration-200 resize-none overflow-hidden"
+                    style={{ margin: 0, padding: 0, lineHeight: '1.5' }}
                   />
                 </div>
                 {commentText.trim() && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (commentText.trim()) {
-                        const newComment: Comment = {
-                          id: uuidv4(),
-                          text: commentText.trim(),
-                          todoId: todo.id,
-                          userId: todo.userId,
-                          createdAt: new Date(),
+                  <div className="flex-shrink-0 pt-0.5">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (commentText.trim()) {
+                          const newComment: Comment = {
+                            id: uuidv4(),
+                            text: commentText.trim(),
+                            todoId: todo.id,
+                            userId: todo.userId,
+                            createdAt: new Date(),
+                          }
+                          onAddComment(todo.id, newComment)
+                          setCommentText("")
                         }
-                        onAddComment(todo.id, newComment)
-                        setCommentText("")
-                      }
-                    }}
-                    className="md:hidden flex-shrink-0 mt-0.5"
-                  >
-                    <ArrowRight className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white/60 transition-colors" />
-                  </button>
+                      }}
+                      className="md:hidden"
+                    >
+                      <ArrowRight className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:text-white/40 dark:hover:text-white/60 transition-colors" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
+            )}
           </div>
-        )}
       </div>
     </div>
   )

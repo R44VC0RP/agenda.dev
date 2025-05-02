@@ -146,9 +146,10 @@ form input {
 /* Base input container styles */
 .todo-input-container {
   position: relative;
-  border-radius: 12px; 
+  border-radius: 12px;
   transform: translateZ(0); /* Force hardware acceleration for smoother animations */
   overflow: visible;
+  transition: all 0.5s ease; /* Global transition for all properties */
 }
 
 /* Light mode border - uses double pseudo-element technique for just border */
@@ -159,7 +160,7 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.5s ease; /* Slightly faster transition when hovering */
+  transition: opacity 0.5s ease, background 0.5s ease; /* Transitions for both opacity and background */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -201,11 +202,15 @@ form input {
   opacity: 1;
 }
 
-/* Light mode focus state */
+/* Light mode focus state - smooth transition to solid */
 :root:not(.dark) .todo-input-container:focus-within::before {
   opacity: 1;
-  background: #ff8420;
-  animation: none;
+  /* Override with a solid color but maintain the same transition */
+  background: #ff8420 !important;
+  /* Pause the animation rather than stopping it */
+  animation-play-state: paused;
+  /* Add transition for the background-color property */
+  transition: background 0.5s ease, opacity 0.5s ease;
 }
 
 :root:not(.dark) .todo-input-container:focus-within::after {
@@ -220,7 +225,7 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.5s ease; /* Slightly faster transition when hovering */
+  transition: opacity 0.5s ease, background 0.5s ease; /* Transitions for both opacity and background */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -262,11 +267,15 @@ form input {
   opacity: 1;
 }
 
-/* Dark mode focus state */
+/* Dark mode focus state - smooth transition to solid */
 .dark .todo-input-container:focus-within::before {
   opacity: 1;
-  background: #7c5aff;
-  animation: none;
+  /* Override with a solid color but maintain the same transition */
+  background: #7c5aff !important;
+  /* Pause the animation rather than stopping it */
+  animation-play-state: paused;
+  /* Add transition for the background-color property */
+  transition: background 0.5s ease, opacity 0.5s ease;
 }
 
 .dark .todo-input-container:focus-within::after {
