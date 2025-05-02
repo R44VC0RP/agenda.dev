@@ -65,9 +65,10 @@
 
 /* Empty space where removed keyframes were */
 
-/* Remove focus outline from inputs to use BorderBeam instead */
-input:focus {
-  outline: none !important;
+/* Accessible focus styles that work with BorderBeam */
+input:focus-visible {
+  outline: 2px solid hsl(var(--sidebar-ring));
+  outline-offset: 2px;
 }
 
 /* Border animation for hover effect */
