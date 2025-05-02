@@ -61,49 +61,25 @@ fi
 
 echo "Binary built successfully at: target/release/agenda"
 
-# Create macOS app bundle
-echo "Creating macOS app bundle..."
+# Use Tauri's built-in bundling tools for creating platform-specific packages
 cd ..
+echo "Creating application bundle using Tauri's bundler..."
 
-# Create app bundle directory structure
-BUNDLE_DIR="src-tauri/target/release/bundle/macos/Agenda.app"
-mkdir -p "$BUNDLE_DIR/Contents/"{MacOS,Resources}
+# Check for the presence of Tauri CLI
+if ! command -v cargo tauri &> /dev/null; then
+  echo "Installing Tauri CLI..."
+  cargo install tauri-cli
+fi
 
-# Copy the binary
-cp src-tauri/target/release/agenda "$BUNDLE_DIR/Contents/MacOS/"
+# Create bundle using Tauri's built-in bundler (works cross-platform)
+# This handles proper app signing, entitlements, and platform-specific requirements
+cargo tauri build
 
-# Copy the icon
-cp src-tauri/icons/icon.icns "$BUNDLE_DIR/Contents/Resources/" 2>/dev/null || echo "Icon not found, skipping..."
-
-# Create Info.plist
-cat > "$BUNDLE_DIR/Contents/Info.plist" << 'EOL'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleDisplayName</key>
-    <string>Agenda</string>
-    <key>CFBundleExecutable</key>
-    <string>agenda</string>
-    <key>CFBundleIconFile</key>
-    <string>icon.icns</string>
-    <key>CFBundleIdentifier</key>
-    <string>dev.agenda.app</string>
-    <key>CFBundleName</key>
-    <string>Agenda</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>10.13</string>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-    <key>NSRequiresAquaSystemAppearance</key>
-    <false/>
-</dict>
-</plist>
-EOL
+# The bundled app will be available at:
+# - macOS: src-tauri/target/release/bundle/macos/Agenda.app
+# - Windows: src-tauri/target/release/bundle/msi/Agenda_x.y.z_x64.msi
+# - Linux: src-tauri/target/release/bundle/appimage/agenda_x.y.z_amd64.AppImage
+BUNDLE_DIR="src-tauri/target/release/bundle"
 
 echo "Build completed successfully!"
 echo "App bundle created at: $BUNDLE_DIR"
