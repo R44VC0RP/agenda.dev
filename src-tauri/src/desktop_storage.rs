@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, Runtime};
 
@@ -16,43 +17,61 @@ impl Default for AppConfig {
     }
 }
 
-pub fn get_app_config_dir<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
-    let app_data_dir = app
-        .path()
-        .app_config_dir()
-        .expect("Could not get app config directory");
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigError {
+    #[error("Failed to get config directory: {0}")]
+    ConfigDirError(String),
+    
+    #[error("Failed to create config directory: {0}")]
+    CreateDirError(io::Error),
+    
+    #[error("Failed to serialize config: {0}")]
+    SerializeError(#[from] serde_json::Error),
+    
+    #[error("Failed to write config file: {0}")]
+    WriteError(#[from] io::Error),
+    
+    #[error("Failed to read config file: {0}")]
+    ReadError(io::Error),
+}
+
+pub fn get_app_config_dir<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, ConfigError> {
+    let app_data_dir = app.path().app_config_dir()
+        .map_err(|e| ConfigError::ConfigDirError(format!("Could not get app config directory: {}", e)))?;
     
     if !app_data_dir.exists() {
-        fs::create_dir_all(&app_data_dir).expect("Could not create app config directory");
+        fs::create_dir_all(&app_data_dir)
+            .map_err(|e| ConfigError::CreateDirError(e))?;
     }
     
-    app_data_dir
+    Ok(app_data_dir)
 }
 
-pub fn get_config_file_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
-    get_app_config_dir(app).join("config.json")
+pub fn get_config_file_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, ConfigError> {
+    let app_dir = get_app_config_dir(app)?;
+    Ok(app_dir.join("config.json"))
 }
 
-pub fn save_config<R: Runtime>(app: &AppHandle<R>, config: &AppConfig) -> Result<(), String> {
-    let config_path = get_config_file_path(app);
-    let config_str = serde_json::to_string_pretty(config)
-        .map_err(|e| format!("Failed to serialize config: {}", e))?;
+pub fn save_config<R: Runtime>(app: &AppHandle<R>, config: &AppConfig) -> Result<(), ConfigError> {
+    let config_path = get_config_file_path(app)?;
+    let config_str = serde_json::to_string_pretty(config)?;
     
-    fs::write(config_path, config_str)
-        .map_err(|e| format!("Failed to write config file: {}", e))
+    fs::write(config_path, config_str)?;
+    Ok(())
 }
 
-pub fn load_config<R: Runtime>(app: &AppHandle<R>) -> AppConfig {
-    let config_path = get_config_file_path(app);
+pub fn load_config<R: Runtime>(app: &AppHandle<R>) -> Result<AppConfig, ConfigError> {
+    let config_path = get_config_file_path(app)?;
     
     if !config_path.exists() {
         let default_config = AppConfig::default();
-        save_config(app, &default_config).expect("Failed to save default config");
-        return default_config;
+        save_config(app, &default_config)?;
+        return Ok(default_config);
     }
     
-    let config_str = fs::read_to_string(config_path)
-        .unwrap_or_else(|_| String::from("{\"preferences\":{}}"));
+    let config_str = fs::read_to_string(&config_path)
+        .map_err(|e| ConfigError::ReadError(e))?;
     
-    serde_json::from_str(&config_str).unwrap_or_default()
+    let config = serde_json::from_str(&config_str)?;
+    Ok(config)
 }
