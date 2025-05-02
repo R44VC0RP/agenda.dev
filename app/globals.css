@@ -59,17 +59,6 @@
   animation: highlight 2s ease-out;
 }
 
-@keyframes gradient-rotate {
-  0% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-  100% {
-    background-position: 0% 0%;
-  }
-}
 
 /* Empty space where removed keyframes were */
 
