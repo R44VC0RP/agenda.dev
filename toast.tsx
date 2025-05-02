@@ -52,7 +52,7 @@ export default function Toast({ state = 'initial', onReset, onSave }: ToastProps
             {state === 'loading' && (
               <>
                 <IOSpinner />
-                <div className="text-white text-[13px] font-normal font-['Outfit'] leading-tight whitespace-nowrap">Saving</div>
+                <div className="text-white text-[13px] font-normal leading-tight whitespace-nowrap">Saving</div>
               </>
             )}
             {state === 'success' && (
@@ -60,13 +60,13 @@ export default function Toast({ state = 'initial', onReset, onSave }: ToastProps
                 <div className="p-0.5 bg-white/25 rounded-[99px] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] shadow-[0px_1px_2px_-0.5px_rgba(0,0,0,0.06)] shadow-[0px_0px_0px_1px_rgba(0,0,0,0.16)] border border-white/25 justify-center items-center gap-1.5 flex overflow-hidden">
                   <Check className="w-3.5 h-3.5 text-white" />
                 </div>
-                <div className="text-white text-[13px] font-normal font-['Outfit'] leading-tight whitespace-nowrap">Changes Saved</div>
+                <div className="text-white text-[13px] font-normal leading-tight whitespace-nowrap">Changes Saved</div>
               </>
             )}
             {state === 'initial' && (
               <>
                 <InfoIcon />
-                <div className="text-white text-[13px] font-normal font-['Outfit'] leading-tight whitespace-nowrap">Unsaved changes</div>
+                <div className="text-white text-[13px] font-normal leading-tight whitespace-nowrap">Unsaved changes</div>
               </>
             )}
           </motion.div>
@@ -84,13 +84,13 @@ export default function Toast({ state = 'initial', onReset, onSave }: ToastProps
                 onClick={onReset}
                 className="px-3 rounded-[99px] justify-center items-center flex hover:bg-white/[0.08] transition-colors"
               >
-                <div className="text-white text-[13px] font-normal font-['Outfit'] leading-tight">Reset</div>
+                <div className="text-white text-[13px] font-normal leading-tight">Reset</div>
               </button>
               <div 
                 onClick={onSave}
                 className="h-7 px-3 bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] rounded-[99px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] justify-center items-center inline-flex overflow-hidden cursor-pointer hover:from-[#8f71ff] hover:to-[#7c5aff] active:from-[#6c47ff] active:to-[#5835ff] transition-all duration-200"
               >
-                <div className="text-white text-[13px] font-medium font-['Outfit'] leading-tight">Save</div>
+                <div className="text-white text-[13px] font-medium leading-tight">Save</div>
               </div>
             </motion.div>
           )}

@@ -10,8 +10,8 @@ interface AnimatedBorderProps {
 
 export function AnimatedBorder({
   className,
-  solidColor = "rgb(124, 90, 255)",
-  gradientColors = "rgb(124, 90, 255), rgb(70, 174, 206), rgb(124, 90, 255)",
+  solidColor = "hsl(var(--primary))",
+  gradientColors = "hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))",
 }: AnimatedBorderProps) {
   return (
     <div className="pointer-events-none absolute inset-0">

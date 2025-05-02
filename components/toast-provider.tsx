@@ -30,7 +30,7 @@ export default function ToastProvider() {
           height: '40px',
           padding: '0 16px',
           fontSize: '13px',
-          fontFamily: 'Outfit, sans-serif',
+          fontFamily: 'OpenRunde, sans-serif',
           gap: '8px',
           display: 'flex',
           alignItems: 'center',

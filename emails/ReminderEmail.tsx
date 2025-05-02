@@ -51,10 +51,10 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
     <Html>
       <Head>
         <Font
-          fontFamily="Outfit"
+          fontFamily="OpenRunde"
           fallbackFontFamily="Helvetica"
           webFont={{
-            url: 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap',
+            url: '/fonts/OpenRunde-Regular.woff2',
             format: 'woff2',
           }}
           fontWeight={400}
@@ -111,7 +111,7 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
 // Updated styles with dark mode support using EmailStyle type
 const main: EmailStyle = {
   backgroundColor: '#f6f6f7',
-  fontFamily: "'Outfit', Helvetica, Arial, sans-serif",
+  fontFamily: "'OpenRunde', Helvetica, Arial, sans-serif",
   margin: '0',
   padding: '0',
   '@media (prefersColorScheme: dark)': {

@@ -6,13 +6,6 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { PostHogProvider } from "@/components/PostHogProvider"
 import ToastProvider from "@/components/toast-provider"
-import { Outfit } from "next/font/google"
-
-const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-outfit',
-})
 
 export const metadata: Metadata = {
   title: "agenda.dev",

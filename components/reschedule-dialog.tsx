@@ -57,7 +57,7 @@ export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDa
       <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="p-0.5 bg-[#7c5aff]/25 rounded-[99px] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] shadow-[0px_1px_2px_-0.5px_rgba(0,0,0,0.06)] shadow-[0px_0px_0px_1px_rgba(0,0,0,0.16)] border border-[#7c5aff]/25 justify-center items-center gap-1.5 flex overflow-hidden">
+            <div className="p-0.5 bg-[#7c5aff]/20 rounded-[99px] shadow-sm border border-[#7c5aff]/30 justify-center items-center gap-1.5 flex overflow-hidden">
               <RotateCcw className="w-3.5 h-3.5 text-[#7c5aff]" />
             </div>
             <DialogTitle>Reschedule to:</DialogTitle>
@@ -73,7 +73,7 @@ export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDa
               onChange={(e) => setDateInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="tomorrow, next week, etc."
-              className="flex-1 bg-transparent border border-white/10 rounded-[6px] px-3 h-8 text-white text-[13px] font-normal font-['Outfit'] leading-tight placeholder-gray-500 focus:outline-none focus:border-[#7c5aff]/50"
+              className="flex-1 bg-transparent border border-gray-200 dark:border-white/10 rounded-[6px] px-3 h-8 text-foreground text-[13px] font-normal leading-tight placeholder-gray-500 focus:outline-none focus:border-[#7c5aff]/50"
               disabled={isLoading}
             />
             {isLoading ? (

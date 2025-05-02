@@ -98,7 +98,7 @@ const heading = {
   lineHeight: '1.3',
   margin: '16px 0',
   color: '#484848',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const paragraph = {
@@ -106,7 +106,7 @@ const paragraph = {
   lineHeight: '1.4',
   color: '#484848',
   margin: '16px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const statsContainer = {
@@ -121,7 +121,7 @@ const statItem = {
   lineHeight: '1.4',
   color: '#484848',
   margin: '8px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
   fontWeight: '500',
 };
 
@@ -135,7 +135,7 @@ const button = {
   display: 'block',
   padding: '12px',
   margin: '24px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
   fontWeight: '500',
 };
 
@@ -149,12 +149,12 @@ const footer = {
   fontSize: '14px',
   margin: '0',
   textAlign: 'center' as const,
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const unsubscribeLink = {
   color: '#9BA2B0',
   textDecoration: 'underline',
   fontSize: '14px',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 }; 

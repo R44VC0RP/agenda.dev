@@ -21,7 +21,7 @@ export default function DeleteConfirmation({ isOpen, onClose, onConfirm }: Delet
       <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="p-0.5 bg-red-500/25 rounded-[99px] shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] shadow-[0px_1px_2px_-0.5px_rgba(0,0,0,0.06)] shadow-[0px_0px_0px_1px_rgba(0,0,0,0.16)] border border-red-500/25 justify-center items-center gap-1.5 flex overflow-hidden">
+            <div className="p-0.5 bg-red-500/20 rounded-[99px] shadow-sm border border-red-500/30 justify-center items-center gap-1.5 flex overflow-hidden">
               <Trash2 className="w-3.5 h-3.5 text-red-500" />
             </div>
             <DialogTitle>Delete this todo?</DialogTitle>

@@ -39,20 +39,43 @@ const getTimeColor = (dateStr: string) => {
 };
 
 const getStatusStyle = (dateStr: string) => {
+  return "relative";
+};
+
+const getStatusBackground = (dateStr: string) => {
+  const dueDate = new Date(dateStr);
+  const now = new Date();
+  const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  // Return SVG gradient encoded as a data URL
+  if (diffHours <= 0) {
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23ef4444' stop-opacity='0.18'/%3E%3Cstop offset='80%25' stop-color='%23ef4444' stop-opacity='0.03'/%3E%3Cstop offset='100%25' stop-color='%23ef4444' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`;
+  } else if (diffHours <= 6) {
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23f59e0b' stop-opacity='0.18'/%3E%3Cstop offset='80%25' stop-color='%23f59e0b' stop-opacity='0.03'/%3E%3Cstop offset='100%25' stop-color='%23f59e0b' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`;
+  } else if (diffHours <= 24) {
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23facc15' stop-opacity='0.18'/%3E%3Cstop offset='80%25' stop-color='%23facc15' stop-opacity='0.03'/%3E%3Cstop offset='100%25' stop-color='%23facc15' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`;
+  } else if (diffHours <= 72) {
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%234ade80' stop-opacity='0.18'/%3E%3Cstop offset='80%25' stop-color='%234ade80' stop-opacity='0.03'/%3E%3Cstop offset='100%25' stop-color='%234ade80' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`;
+  } else {
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%2322c55e' stop-opacity='0.18'/%3E%3Cstop offset='80%25' stop-color='%2322c55e' stop-opacity='0.03'/%3E%3Cstop offset='100%25' stop-color='%2322c55e' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`;
+  }
+};
+
+const getStatusBorder = (dateStr: string) => {
   const dueDate = new Date(dateStr);
   const now = new Date();
   const diffHours = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
   if (diffHours <= 0) {
-    return "bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent dark:from-red-500/20 dark:via-red-500/10 dark:to-transparent border-l-2 border-red-500/60 dark:border-red-400/60";
+    return "2px solid rgba(239, 68, 68, 0.6)";
   } else if (diffHours <= 6) {
-    return "bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent dark:from-yellow-500/20 dark:via-yellow-500/10 dark:to-transparent border-l-2 border-yellow-500/60 dark:border-yellow-400/60";
+    return "2px solid rgba(245, 158, 11, 0.6)";
   } else if (diffHours <= 24) {
-    return "bg-gradient-to-r from-yellow-400/10 via-yellow-400/5 to-transparent dark:from-yellow-400/20 dark:via-yellow-400/10 dark:to-transparent border-l-2 border-yellow-400/60 dark:border-yellow-300/60";
+    return "2px solid rgba(250, 204, 21, 0.6)";
   } else if (diffHours <= 72) {
-    return "bg-gradient-to-r from-green-400/10 via-green-400/5 to-transparent dark:from-green-400/20 dark:via-green-400/10 dark:to-transparent border-l-2 border-green-400/60 dark:border-green-300/60";
+    return "2px solid rgba(74, 222, 128, 0.6)";
   } else {
-    return "bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent dark:from-green-500/20 dark:via-green-500/10 dark:to-transparent border-l-2 border-green-500/60 dark:border-green-400/60";
+    return "2px solid rgba(34, 197, 94, 0.6)";
   }
 };
 
@@ -237,14 +260,35 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
   return (
     <div
       id={`todo-${todo.id}`}
-      className={`bg-white dark:bg-card rounded-[12px] shadow-card hover:shadow-card-hover border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-200 ${isHovered ? 'translate-y-[-1px]' : ''}`}
+      className={`bg-white dark:bg-card rounded-[12px] transition-all duration-300 ease-in-out border border-gray-100 dark:border-gray-800 overflow-hidden relative`}
+      style={{
+        boxShadow: isHovered 
+          ? '0 8px 20px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.05)' 
+          : '0 1px 3px -1px rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.02)',
+        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+        margin: '2px 4px 4px 4px'
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex flex-col relative">
-        <div className={`${
-          todo.dueDate ? getStatusStyle(todo.dueDate) : ""
-        }`}>
+        <div
+          className="w-full h-full relative"
+          style={{
+            borderLeft: todo.dueDate ? getStatusBorder(todo.dueDate) : "none",
+          }}
+        >
+          {todo.dueDate && (
+            <div 
+              className="absolute inset-0 z-0" 
+              style={{
+                background: getStatusBackground(todo.dueDate),
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat"
+              }}
+            />
+          )}
+        
           <div className="absolute top-2 right-2 z-10">
             <DeleteConfirmation 
               isOpen={showDeleteConfirm}
@@ -265,7 +309,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
             />
           </div>
 
-          <div className="p-4 cursor-pointer" onClick={toggleExpand}>
+          <div className="p-4 cursor-pointer relative z-1" onClick={toggleExpand}>
             <div className="flex items-start gap-2">
               <button
                 onClick={(e) => {
@@ -281,7 +325,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                 )}
               </button>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative z-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center w-[85%]">
                     <p
@@ -293,7 +337,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                     </p>
 
                     {todo.comments.length > 0 && (
-                      <div className="ml-2 flex items-center text-gray-400 dark:text-white/50">
+                      <div className="ml-2 flex items-center text-gray-400 dark:text-white/50 relative z-1">
                         <MessageSquare className="w-3.5 h-3.5" />
                         <span className="ml-1 text-xs">{todo.comments.length}</span>
                       </div>
@@ -341,7 +385,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                   </div>
                 </div>
 
-                <div className="flex items-center mt-1 text-[13px] space-x-1">
+                <div className="flex items-center mt-1 text-[13px] space-x-1 relative z-1">
                   {todo.dueDate && (
                     <TimeDisplay dueDate={todo.dueDate} />
                   )}
@@ -352,8 +396,11 @@ export default function TodoItem({ todo, onToggle, onDelete, onAddComment, onDel
                       <span className="font-medium text-gray-400 dark:text-white/50">{todo.urgency.toFixed(1)}</span>
                       <div className="w-8 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-[#7c5aff] to-[#6c47ff]"
-                          style={{ width: `${(todo.urgency / 5) * 100}%` }}
+                          style={{ 
+                            width: `${(todo.urgency / 5) * 100}%`,
+                            height: '100%',
+                            background: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%237c5aff'/%3E%3Cstop offset='50%25' stop-color='%237152ff'/%3E%3Cstop offset='100%25' stop-color='%236c47ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`
+                          }}
                         />
                       </div>
                     </div>
