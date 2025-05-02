@@ -7,8 +7,8 @@ use tauri::Runtime;
 #[tauri::command]
 async fn get_preferences<R: Runtime>(
     app: tauri::AppHandle<R>,
-) -> Result<serde_json::Value, String> {
-    let config = load_config(&app).map_err(|e| e.to_string())?;
+) -> Result<serde_json::Value, ConfigError> {
+    let config = load_config(&app)?;
     Ok(config.preferences)
 }
 
@@ -16,21 +16,24 @@ async fn get_preferences<R: Runtime>(
 async fn save_preferences<R: Runtime>(
     app: tauri::AppHandle<R>,
     preferences: serde_json::Value,
-) -> Result<(), String> {
+) -> Result<(), ConfigError> {
     match load_config(&app) {
         Ok(mut config) => {
             config.preferences = preferences;
-            save_config(&app, &config).map_err(|e| e.to_string())?;
+            save_config(&app, &config)?;
+            Ok(())
+        }
+        Err(ConfigError::ReadError(_)) => {
+            // file missing – create a fresh one
+            info!("No existing config found, creating default");
+            let config = AppConfig { preferences, ..AppConfig::default() };
+            save_config(&app, &config)?;
             Ok(())
         }
         Err(e) => {
-            error!("Failed to load config: {}", e);
-            let config = AppConfig {
-                preferences,
-                ..AppConfig::default()
-            };
-            save_config(&app, &config).map_err(|e| e.to_string())?;
-            Ok(())
+            // keep the faulty file around for manual recovery
+            error!("Corrupted config – aborting save to prevent data loss: {}", e);
+            return Err(e);
         }
     }
 }
