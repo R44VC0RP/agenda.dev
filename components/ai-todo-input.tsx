@@ -323,7 +323,8 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="what's on your agenda?"
-                className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200 text-center"
+                className="flex-1 bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200 text-center no-inner-border"
+                style={{ border: 'none' }}
                 disabled={isProcessing || (pendingFields.includes("urgency") && pendingFields.length === 1)}
                 // Remove the onFocus handler that was causing issues
               />
@@ -409,7 +410,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Provide more details..."
-                  className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200"
+                  className="w-full bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200"
                   disabled={isProcessing}
                 />
               </motion.div>

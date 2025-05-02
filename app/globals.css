@@ -63,9 +63,32 @@
 /* Empty space where removed keyframes were */
 
 /* Accessible focus styles that work with BorderBeam */
-input:focus-visible {
+input:focus-visible:not(.no-inner-border) {
   outline: 2px solid hsl(var(--sidebar-ring));
   outline-offset: 2px;
+}
+
+/* Override Tailwind's ring utilities for most inputs */
+input:focus-visible:not(.group input, .no-inner-border) {
+  --tw-ring-offset-width: 0 !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-shadow: none !important;
+  --tw-ring-shadow: none !important;
+}
+
+/* Remove any inner borders from AITodoInput */
+form input {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Target the todo input field specifically, but allow container border */
+.group input[type="text"],
+.no-inner-border {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Border animation for hover effect */
