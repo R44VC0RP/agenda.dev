@@ -136,82 +136,130 @@ form input {
 }
 
 @keyframes backgroundMove {
-  0%, 100% {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Ultra reliable border animation using pseudo elements */
+
+/* Base input container styles */
+.todo-input-container {
+  position: relative;
+  border-radius: 12px; 
+  transform: translateZ(0); /* Force hardware acceleration for smoother animations */
+  overflow: visible;
+}
+
+/* Light mode border - uses double pseudo-element technique for just border */
+:root:not(.dark) .todo-input-container::before,
+:root:not(.dark) .todo-input-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 14px;
+  inset: -2px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: -1; /* Ensure they're behind content */
+}
+
+/* Outer element - colored border */
+:root:not(.dark) .todo-input-container::before {
+  z-index: -2;
+  background: linear-gradient(-45deg, #ff8420, #ff6b59, #ff4d8b, #ff6b59, #ff8420);
+  background-size: 400% 400%;
+}
+
+/* Inner element - creates the cutout */
+:root:not(.dark) .todo-input-container::after {
+  z-index: -1;
+  background: #fff; /* Match the background color */
+  inset: 0; /* Smaller than the outer element to create border effect */
+  border-radius: 12px; /* Smaller radius than outer element */
+}
+
+/* Light mode hover state */
+:root:not(.dark) .todo-input-container:hover::before {
+  opacity: 1;
+  animation: gradientAnimation 5s ease infinite; /* Slower animation */
+}
+:root:not(.dark) .todo-input-container:hover::after {
+  opacity: 1;
+}
+
+/* Light mode focus state */
+:root:not(.dark) .todo-input-container:focus-within::before {
+  opacity: 1;
+  background: #ff8420;
+  animation: none;
+}
+:root:not(.dark) .todo-input-container:focus-within::after {
+  opacity: 1;
+}
+
+/* Dark mode border - same technique */
+.dark .todo-input-container::before,
+.dark .todo-input-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 14px;
+  inset: -2px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: -1; /* Ensure they're behind content */
+}
+
+/* Outer element - colored border */
+.dark .todo-input-container::before {
+  z-index: -2;
+  background: linear-gradient(-45deg, #7c5aff, #6b72e8, #30A5CE, #6b72e8, #7c5aff);
+  background-size: 400% 400%;
+}
+
+/* Inner element - creates the cutout */
+.dark .todo-input-container::after {
+  z-index: -1;
+  background: #131316; /* Match the dark background color */
+  inset: 0; /* Smaller than the outer element to create border effect */
+  border-radius: 12px; /* Smaller radius than outer element */
+}
+
+/* Dark mode hover state */
+.dark .todo-input-container:hover::before {
+  opacity: 1;
+  animation: gradientAnimation 5s ease infinite; /* Slower animation */
+}
+.dark .todo-input-container:hover::after {
+  opacity: 1;
+}
+
+/* Dark mode focus state */
+.dark .todo-input-container:focus-within::before {
+  opacity: 1;
+  background: #7c5aff;
+  animation: none;
+}
+.dark .todo-input-container:focus-within::after {
+  opacity: 1;
+}
+
+/* Shared gradient animation - slower and smoother */
+@keyframes gradientAnimation {
+  0% {
     background-position: 0% 50%;
   }
   50% {
     background-position: 100% 50%;
   }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* Todo input container styling */
-.todo-input-container {
-  isolation: isolate;
-  position: relative;
-}
-
-/* Light mode border */
-:root:not(.dark) .todo-input-container {
-  box-shadow: 0 0 0 2px transparent;
-  transition: box-shadow 0.3s ease;
-}
-
-:root:not(.dark) .todo-input-container:hover {
-  box-shadow: 0 0 0 2px #ff8420;
-}
-
-:root:not(.dark) .todo-input-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  padding: 2px;
-  background: linear-gradient(90deg, #ff8420, #ff4d8b, #ff8420);
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  background-size: 200% 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-:root:not(.dark) .todo-input-container:hover::before {
-  opacity: 1;
-  animation: backgroundMove 3s linear infinite;
-}
-
-/* Dark mode border */
-.dark .todo-input-container {
-  box-shadow: 0 0 0 2px transparent;
-  transition: box-shadow 0.3s ease;
-}
-
-.dark .todo-input-container:hover {
-  box-shadow: 0 0 0 2px #7c5aff;
-}
-
-.dark .todo-input-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  padding: 2px;
-  background: linear-gradient(90deg, #7c5aff, #30A5CE, #7c5aff);
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  background-size: 200% 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.dark .todo-input-container:hover::before {
-  opacity: 1;
-  animation: backgroundMove 3s linear infinite;
+@keyframes gradientSlide {
+  to { background-position: 200% center; }
 }
 
 body {

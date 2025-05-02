@@ -122,7 +122,7 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
 
   return (
     <div className="mb-8">
-      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group transition-all duration-200 todo-input-container z-10">
+      <div className="relative bg-white dark:bg-[#131316] shadow-md dark:shadow-lg max-w-[600px] mx-auto todo-input-container">
         <div className="p-5">
           <div className="flex items-center justify-center gap-2">
             <input
