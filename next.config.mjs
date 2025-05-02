@@ -9,31 +9,37 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Required for Tauri static export
+  
+  // For desktop app, we need to use static export
   output: process.env.TAURI_ENABLED === 'true' ? 'export' : undefined,
-  // Prevent conflicts with Tauri
-  distDir: process.env.TAURI_ENABLED === 'true' ? '.next' : 'out',
-  async rewrites() {
-    // Skip rewrites in Tauri build since they're not supported with static export
-    if (process.env.TAURI_ENABLED === 'true') {
-      return [];
-    }
-    
-    return [
-      {
-        source: '/ingest/static/:path*',
-        destination: 'https://us-assets.i.posthog.com/static/:path*',
-      },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
-      {
-        source: '/ingest/decide',
-        destination: 'https://us.i.posthog.com/decide',
-      },
-    ];
-  },
+  
+  // Next will use a different output directory for Tauri builds
+  distDir: process.env.TAURI_ENABLED === 'true' ? 'out' : '.next',
+  
+  // Web-only features
+  ...(process.env.TAURI_ENABLED !== 'true' ? {
+    async rewrites() {
+      return [
+        {
+          source: '/ingest/static/:path*',
+          destination: 'https://us-assets.i.posthog.com/static/:path*',
+        },
+        {
+          source: '/ingest/:path*',
+          destination: 'https://us.i.posthog.com/:path*',
+        },
+        {
+          source: '/ingest/decide',
+          destination: 'https://us.i.posthog.com/decide',
+        },
+      ];
+    },
+  } : {
+    // Desktop-only settings
+    // Turn off generating all API routes for the desktop build
+    pageExtensions: ['js', 'jsx', 'ts', 'tsx'].filter(ext => ext !== 'api'),
+  }),
+  
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
 };

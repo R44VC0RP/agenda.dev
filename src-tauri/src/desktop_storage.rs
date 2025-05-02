@@ -17,21 +17,25 @@ impl Default for AppConfig {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Serialize)]
 pub enum ConfigError {
     #[error("Failed to get config directory: {0}")]
     ConfigDirError(String),
     
     #[error("Failed to create config directory: {0}")]
+    #[serde(skip_serializing)]
     CreateDirError(io::Error),
     
     #[error("Failed to serialize config: {0}")]
+    #[serde(skip_serializing)]
     SerializeError(#[from] serde_json::Error),
     
     #[error("Failed to write config file: {0}")]
+    #[serde(skip_serializing)]
     WriteError(#[from] io::Error),
     
     #[error("Failed to read config file: {0}")]
+    #[serde(skip_serializing)]
     ReadError(io::Error),
 }
 

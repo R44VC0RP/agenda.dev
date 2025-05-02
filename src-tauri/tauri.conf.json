@@ -7,7 +7,7 @@
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000/desktop",
     "beforeDevCommand": "bun dev",
-    "beforeBuildCommand": "bun run build"
+    "beforeBuildCommand": "bun run build:desktop"
   },
   "app": {
     "windows": [
@@ -36,9 +36,9 @@
       "frameworks": [],
       "minimumSystemVersion": "10.13",
       "exceptionDomain": "agenda.dev",
-      "signingIdentity": "Developer ID Application: Agenda Labs (XXXXXXXXXXXX)",
-      "entitlements": "entitlements.plist",
-      "providerShortName": "XXXXXXXXXXXX"
+      "providerShortName": null,
+      "signingIdentity": null,
+      "entitlements": null
     },
     "icon": [
       "icons/32x32.png",

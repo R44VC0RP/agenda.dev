@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:desktop": "TAURI_ENABLED=true next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -19,7 +20,7 @@
     "prepare": "husky",
     "tauri": "tauri",
     "tauri:dev": "bun --env-file=.env.tauri tauri dev",
-    "tauri:build": "bun --env-file=.env.tauri tauri build",
+    "tauri:build": "./build.sh",
     "tauri:build:mac": "bun --env-file=.env.tauri tauri build --target universal-apple-darwin"
   },
   "dependencies": {
