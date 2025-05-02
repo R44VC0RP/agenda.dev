@@ -159,7 +159,7 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.7s ease; /* Slower transition when hovering */
+  transition: opacity 0.5s ease; /* Slightly faster transition when hovering */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -182,7 +182,7 @@ form input {
 /* Light mode hover state */
 :root:not(.dark) .todo-input-container:hover::before {
   opacity: 1;
-  animation: gradientAnimation 8s ease infinite; /* Even slower animation */
+  animation: gradientAnimation 6s ease infinite; /* Balanced animation speed */
 }
 :root:not(.dark) .todo-input-container:hover::after {
   opacity: 1;
@@ -206,7 +206,7 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.7s ease; /* Slower transition when hovering */
+  transition: opacity 0.5s ease; /* Slightly faster transition when hovering */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -229,7 +229,7 @@ form input {
 /* Dark mode hover state */
 .dark .todo-input-container:hover::before {
   opacity: 1;
-  animation: gradientAnimation 8s ease infinite; /* Even slower animation */
+  animation: gradientAnimation 6s ease infinite; /* Balanced animation speed */
 }
 .dark .todo-input-container:hover::after {
   opacity: 1;
@@ -245,16 +245,16 @@ form input {
   opacity: 1;
 }
 
-/* Shared gradient animation - much slower and smoother */
+/* Shared gradient animation - balanced timing */
 @keyframes gradientAnimation {
   0%, 10% {
-    background-position: 0% 50%;
+    background-position: 0% 50%;  /* Start - right side */
   }
-  45%, 55% {
-    background-position: 100% 50%;
+  40% {
+    background-position: 100% 50%; /* Left side - spend less time here */
   }
-  90%, 100% {
-    background-position: 0% 50%;
+  70%, 100% {
+    background-position: 0% 50%;  /* Back to right side - spend more time here */
   }
 }
 
