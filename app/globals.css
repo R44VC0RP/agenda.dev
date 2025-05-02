@@ -164,11 +164,23 @@ form input {
   z-index: -1; /* Ensure they're behind content */
 }
 
-/* Outer element - colored border */
+/* Outer element - colored border - perfectly looping gradient */
 :root:not(.dark) .todo-input-container::before {
   z-index: -2;
-  background: linear-gradient(-45deg, #ff8420, #ff6b59, #ff4d8b, #ff6b59, #ff8420);
-  background-size: 400% 400%;
+  /* Duplicated gradient to make it perfectly seamless when looping */
+  background: linear-gradient(90deg, 
+    #ff8420 0%, 
+    #ff6b59 12.5%, 
+    #ff4d8b 25%, 
+    #ff6b59 37.5%, 
+    #ff8420 50%,
+    #ff8420 50%, 
+    #ff6b59 62.5%, 
+    #ff4d8b 75%, 
+    #ff6b59 87.5%, 
+    #ff8420 100%
+  );
+  background-size: 200% 100%; /* 200% with the duplicated gradient ensures no visual jumps */
 }
 
 /* Inner element - creates the cutout */
@@ -182,8 +194,9 @@ form input {
 /* Light mode hover state */
 :root:not(.dark) .todo-input-container:hover::before {
   opacity: 1;
-  animation: gradientAnimation 6s ease infinite; /* Balanced animation speed */
+  animation: simpleSlide 6s linear infinite; /* Slower for subtlety, linear for perfect looping */
 }
+
 :root:not(.dark) .todo-input-container:hover::after {
   opacity: 1;
 }
@@ -194,6 +207,7 @@ form input {
   background: #ff8420;
   animation: none;
 }
+
 :root:not(.dark) .todo-input-container:focus-within::after {
   opacity: 1;
 }
@@ -211,11 +225,23 @@ form input {
   z-index: -1; /* Ensure they're behind content */
 }
 
-/* Outer element - colored border */
+/* Outer element - colored border - perfectly looping gradient */
 .dark .todo-input-container::before {
   z-index: -2;
-  background: linear-gradient(-45deg, #7c5aff, #6b72e8, #30A5CE, #6b72e8, #7c5aff);
-  background-size: 400% 400%;
+  /* Duplicated gradient to make it perfectly seamless when looping */
+  background: linear-gradient(90deg, 
+    #7c5aff 0%, 
+    #6b72e8 12.5%, 
+    #30A5CE 25%, 
+    #6b72e8 37.5%, 
+    #7c5aff 50%,
+    #7c5aff 50%, 
+    #6b72e8 62.5%, 
+    #30A5CE 75%, 
+    #6b72e8 87.5%, 
+    #7c5aff 100%
+  );
+  background-size: 200% 100%; /* 200% with the duplicated gradient ensures no visual jumps */
 }
 
 /* Inner element - creates the cutout */
@@ -229,8 +255,9 @@ form input {
 /* Dark mode hover state */
 .dark .todo-input-container:hover::before {
   opacity: 1;
-  animation: gradientAnimation 6s ease infinite; /* Balanced animation speed */
+  animation: simpleSlide 6s linear infinite; /* Slower for subtlety, linear for perfect looping */
 }
+
 .dark .todo-input-container:hover::after {
   opacity: 1;
 }
@@ -241,20 +268,18 @@ form input {
   background: #7c5aff;
   animation: none;
 }
+
 .dark .todo-input-container:focus-within::after {
   opacity: 1;
 }
 
-/* Shared gradient animation - balanced timing */
-@keyframes gradientAnimation {
-  0%, 10% {
-    background-position: 0% 50%;  /* Start - right side */
+/* Perfectly seamless looping animation - no visible resets */
+@keyframes simpleSlide {
+  from {
+    background-position: 0% 50%;
   }
-  40% {
-    background-position: 100% 50%; /* Left side - spend less time here */
-  }
-  70%, 100% {
-    background-position: 0% 50%;  /* Back to right side - spend more time here */
+  to {
+    background-position: 100% 50%;
   }
 }
 
