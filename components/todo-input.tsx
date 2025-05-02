@@ -122,11 +122,7 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
 
   return (
     <div className="mb-8">
-      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group">
-        <AnimatedBorder 
-          solidColor="rgb(124, 90, 255)"
-          gradientColors="rgb(124, 90, 255), rgb(70, 174, 206), rgb(124, 90, 255)"
-        />
+      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group transition-all duration-200 todo-input-container z-10">
         <div className="p-5">
           <div className="flex items-center justify-center gap-2">
             <input
@@ -220,7 +216,7 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
                     </button>
                     <button
                       onClick={submitTodo}
-                      className="ml-2 px-4 h-8 bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium hover:from-[#8f71ff] hover:to-[#7c5aff] active:from-[#6c47ff] active:to-[#5835ff] transition-all duration-200"
+                      className="ml-2 px-4 h-8 bg-gradient-to-b from-primary to-primary/80 rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium hover:brightness-110 active:brightness-90 transition-all duration-200"
                     >
                       Add Todo
                     </button>

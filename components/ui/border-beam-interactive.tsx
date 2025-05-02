@@ -12,8 +12,8 @@ interface BorderBeamInteractiveProps {
 
 export const BorderBeamInteractive = ({
   className,
-  borderColor = "rgb(124, 90, 255)",
-  hoverGradient = "linear-gradient(90deg, #7c5aff, #46AECE, #7c5aff)",
+  borderColor = "var(--border-color-custom, hsl(var(--primary)))",
+  hoverGradient = "var(--hover-gradient-custom, linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))))",
   duration = 3,
 }: BorderBeamInteractiveProps) => {
   const [mounted, setMounted] = useState(false)
@@ -32,13 +32,13 @@ export const BorderBeamInteractive = ({
         // No styles by default (no border or animation when neither hovering nor focused)
         
         // Apply different styles for hover vs focus states
-        "before:absolute before:inset-0 before:rounded-[inherit] before:p-[1px] before:content-[''] before:opacity-0",
+        "before:absolute before:inset-0 before:rounded-[inherit] before:p-[2px] before:content-[''] before:opacity-0",
         "group-hover:before:opacity-100 group-focus-within:before:opacity-0", // Show gradient on hover only
         "before:bg-[--hover-gradient] before:bg-[length:200%_100%] before:transition-all before:duration-300",
         "group-hover:animate-border-flow", // Animation class (controlled by CSS)
         
         // Solid border when focused
-        "after:absolute after:inset-0 after:rounded-[inherit] after:p-[1px] after:content-[''] after:opacity-0",
+        "after:absolute after:inset-0 after:rounded-[inherit] after:p-[2px] after:content-[''] after:opacity-0",
         "after:border after:border-[--border-color] after:box-border",
         "group-focus-within:after:opacity-100", // Show solid border on focus only
         "after:transition-opacity after:duration-300",

@@ -294,11 +294,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
 
   return (
     <div className="mb-8">
-      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group">
-        <AnimatedBorder 
-          solidColor="rgb(124, 90, 255)"
-          gradientColors="rgb(124, 90, 255), rgb(70, 174, 206), rgb(124, 90, 255)"
-        />
+      <div className="relative bg-white dark:bg-[#131316] rounded-[12px] shadow-md dark:shadow-lg overflow-hidden max-w-[600px] mx-auto group transition-all duration-200 todo-input-container z-10">
         <div className="p-5">
           {/* Current prompt - show at top when collecting details */}
           <AnimatePresence>
@@ -376,7 +372,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleSubmit(undefined, suggestion.value)}
-                    className="px-3 py-1.5 rounded-full text-[13px] bg-[#7c5aff]/10 dark:bg-[#7c5aff]/20 text-[#7c5aff] dark:text-[#a490ff] flex items-center gap-1.5 border border-[#7c5aff]/20 dark:border-[#7c5aff]/30 transition-colors hover:bg-[#7c5aff]/20 dark:hover:bg-[#7c5aff]/30"
+                    className="px-3 py-1.5 rounded-full text-[13px] bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 flex items-center gap-1.5 border border-primary/20 dark:border-primary/30 transition-colors hover:bg-primary/20 dark:hover:bg-primary/30"
                   >
                     {suggestion.type === 'date' && <Calendar className="w-3.5 h-3.5" />}
                     {suggestion.type === 'time' && <Clock className="w-3.5 h-3.5" />}
@@ -389,7 +385,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Or enter manually..."
-                    className="px-3 py-1.5 rounded-full text-[13px] bg-gray-100/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-[#7c5aff]/30 dark:focus:border-[#7c5aff]/40 transition-colors w-[150px]"
+                    className="px-3 py-1.5 rounded-full text-[13px] bg-gray-100/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-primary/30 dark:focus:border-primary/40 transition-colors w-[150px]"
                   />
                 </form>
               </motion.div>
@@ -462,7 +458,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                     </button>
                     <button
                       onClick={handleUrgencySubmit}
-                      className="ml-2 px-4 h-8 bg-gradient-to-b from-[#7c5aff] to-[#6c47ff] rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium hover:from-[#8f71ff] hover:to-[#7c5aff] active:from-[#6c47ff] active:to-[#5835ff] transition-all duration-200"
+                      className="ml-2 px-4 h-8 bg-gradient-to-b from-primary to-primary/80 rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium hover:brightness-110 active:brightness-90 transition-all duration-200"
                     >
                       Set Urgency
                     </button>

@@ -11,39 +11,21 @@ interface AnimatedBorderProps {
 export function AnimatedBorder({
   className,
   solidColor = "hsl(var(--primary))",
-  gradientColors = "hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))",
+  gradientColors = "hsl(var(--primary)/0.9), hsl(var(--accent)/0.9), hsl(var(--primary)/0.9)",
 }: AnimatedBorderProps) {
   return (
     <div className="pointer-events-none absolute inset-0">
-      {/* This CSS ensures consistent behavior */}
-      <style jsx global>{`
-        .group:focus-within {
-          --border-visible: 1;
-          --animation-visible: 0;
-        }
-        
-        .group:hover:not(:focus-within) {
-          --border-visible: 0;
-          --animation-visible: 1;
-        }
-        
-        .group:not(:hover):not(:focus-within) {
-          --border-visible: 0;
-          --animation-visible: 0;
-        }
-      `}</style>
-      
       {/* Solid border that shows only when focused */}
       <div
         className={cn(
           "absolute inset-0 rounded-[12px]",
           "border border-solid transition-opacity duration-300",
+          "group-focus-within:opacity-100 opacity-0",
           className
         )}
         style={{
           borderColor: solidColor,
-          borderWidth: "1.5px",
-          opacity: "var(--border-visible, 0)",
+          borderWidth: "2px",
           zIndex: 10,
           boxSizing: "border-box",
         }}
@@ -52,16 +34,16 @@ export function AnimatedBorder({
       {/* Animated gradient border that shows only on hover when not focused */}
       <div 
         className={cn(
+          "animated-gradient-border",
           "absolute inset-0 rounded-[12px]",
           "transition-opacity duration-300 overflow-hidden",
+          "group-hover:opacity-100 group-focus-within:opacity-0 opacity-0",
           className
         )}
         style={{
           background: `linear-gradient(90deg, ${gradientColors})`,
           backgroundSize: "200% 100%",
-          padding: "1px",
-          opacity: "var(--animation-visible, 0)",
-          animation: "animatedGradient 3s linear infinite",
+          padding: "2px",
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           WebkitMaskComposite: "xor",
           maskComposite: "exclude",

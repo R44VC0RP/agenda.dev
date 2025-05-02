@@ -96,9 +96,122 @@ form input {
   0% {
     background-position: 0% 50%;
   }
-  100% {
-    background-position: 200% 50%;
+  50% {
+    background-position: 100% 50%;
   }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shine {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Add a simple pulsing animation instead */
+@keyframes simplePulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes borderRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes backgroundMove {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Todo input container styling */
+.todo-input-container {
+  isolation: isolate;
+  position: relative;
+}
+
+/* Light mode border */
+:root:not(.dark) .todo-input-container {
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.3s ease;
+}
+
+:root:not(.dark) .todo-input-container:hover {
+  box-shadow: 0 0 0 2px #ff8420;
+}
+
+:root:not(.dark) .todo-input-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: linear-gradient(90deg, #ff8420, #ff4d8b, #ff8420);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+:root:not(.dark) .todo-input-container:hover::before {
+  opacity: 1;
+  animation: backgroundMove 3s linear infinite;
+}
+
+/* Dark mode border */
+.dark .todo-input-container {
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.3s ease;
+}
+
+.dark .todo-input-container:hover {
+  box-shadow: 0 0 0 2px #7c5aff;
+}
+
+.dark .todo-input-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: linear-gradient(90deg, #7c5aff, #30A5CE, #7c5aff);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dark .todo-input-container:hover::before {
+  opacity: 1;
+  animation: backgroundMove 3s linear infinite;
 }
 
 body {
@@ -188,6 +301,17 @@ body {
 }
 
 @layer base {
+  /* Custom CSS Variables for Border Animations */
+  :root {
+    --border-color-custom: hsl(30 95% 55%);
+    --hover-gradient-custom: linear-gradient(90deg, hsl(30 95% 55%), hsl(340 85% 55%), hsl(30 95% 55%));
+  }
+  
+  .dark {
+    --border-color-custom: hsl(260 80% 65%);
+    --hover-gradient-custom: linear-gradient(90deg, hsl(260 80% 65%), hsl(190 80% 55%), hsl(260 80% 65%));
+  }
+  
   :root {
     /* Base colors */
     --background: 0 0% 100%;
@@ -196,19 +320,19 @@ body {
     --card-foreground: 220 10% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 10% 10%;
-    --primary: 260 80% 60%;
+    --primary: 30 95% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 20% 92%;
-    --secondary-foreground: 260 30% 30%;
-    --muted: 220 10% 96%;
-    --muted-foreground: 220 10% 40%;
-    --accent: 190 80% 50%;
+    --secondary: 30 20% 92%;
+    --secondary-foreground: 30 30% 30%;
+    --muted: 30 10% 96%;
+    --muted-foreground: 30 10% 40%;
+    --accent: 340 85% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 90% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 260 80% 60%;
+    --border: 30 13% 91%;
+    --input: 30 13% 91%;
+    --ring: 30 95% 50%;
     --chart-1: 260 80% 60%;
     --chart-2: 190 80% 50%;
     --chart-3: 330 80% 60%;
@@ -217,14 +341,14 @@ body {
     --radius: 0.5rem;
     
     /* Sidebar colors */
-    --sidebar-background: 220 30% 99%;
-    --sidebar-foreground: 240 10% 20%;
-    --sidebar-primary: 260 80% 60%;
+    --sidebar-background: 30 30% 99%;
+    --sidebar-foreground: 30 10% 20%;
+    --sidebar-primary: 30 95% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 30% 95%;
-    --sidebar-accent-foreground: 260 60% 30%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 260 80% 60%;
+    --sidebar-accent: 30 30% 95%;
+    --sidebar-accent-foreground: 30 60% 30%;
+    --sidebar-border: 30 13% 91%;
+    --sidebar-ring: 30 95% 50%;
     
     /* Shadow values - light mode */
     --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 1px 1px rgba(0, 0, 0, 0.04);
@@ -232,7 +356,7 @@ body {
     --shadow-lg: 0px 8px 16px rgba(0, 0, 0, 0.06), 0px 12px 24px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0px 12px 32px rgba(0, 0, 0, 0.1), 0px 20px 64px rgba(0, 0, 0, 0.08);
     --shadow-inner: inset 0px 2px 4px rgba(0, 0, 0, 0.05), inset 0px 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-accent: 0px 4px 16px rgba(124, 90, 255, 0.25), 0px 8px 24px rgba(124, 90, 255, 0.15);
+    --shadow-accent: 0px 4px 16px rgba(255, 126, 50, 0.25), 0px 8px 24px rgba(255, 126, 50, 0.15);
   }
   
   .dark {
