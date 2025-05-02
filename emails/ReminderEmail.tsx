@@ -2,17 +2,17 @@ import {
   Body,
   Container,
   Head,
-  Heading,
+  _Heading,
   Html,
   Link,
   Preview,
   Section,
   Text,
   Font,
-  Button,
-  Hr,
-} from "@react-email/components";
-import * as React from "react";
+  _Button,
+  _Hr,
+} from '@react-email/components';
+import * as React from 'react';
 import { CSSProperties } from 'react';
 
 // Custom type for email styles that includes media queries
@@ -30,7 +30,7 @@ interface ReminderEmailProps {
 
 const baseUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+  : 'http://localhost:3000';
 
 export const ReminderEmail: React.FC<ReminderEmailProps> = ({
   todoTitle,
@@ -51,10 +51,10 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
     <Html>
       <Head>
         <Font
-          fontFamily="Outfit"
+          fontFamily="OpenRunde"
           fallbackFontFamily="Helvetica"
           webFont={{
-            url: 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap',
+            url: '/fonts/OpenRunde-Regular.woff2',
             format: 'woff2',
           }}
           fontWeight={400}
@@ -65,25 +65,23 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
       <Body style={main}>
         <Container style={containerStyle}>
           <Section style={cardStyle}>
-            <Text style={headerStyle}>
-              {todoTitle}
-            </Text>
+            <Text style={headerStyle}>{todoTitle}</Text>
             <Text style={dueDateStyle}>Due: {formattedDueDate}</Text>
-            
+
             <div style={urgencyContainer}>
               <Text style={urgencyLabel}>Task Progress</Text>
-              <div style={{
-                height: '8px',
-                borderRadius: '4px',
-                background: urgencyGradient,
-              }} />
+              <div
+                style={{
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: urgencyGradient,
+                }}
+              />
             </div>
 
             {comments.length > 0 && (
               <div style={commentsSection}>
-                <Text style={commentsSectionTitle}>
-                  Recent Comments
-                </Text>
+                <Text style={commentsSectionTitle}>Recent Comments</Text>
                 {comments.map((comment, index) => (
                   <Text key={index} style={commentStyle}>
                     {comment}
@@ -99,9 +97,7 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
             </div>
           </Section>
 
-          <Text style={footerText}>
-            This reminder was sent from your Agenda.dev todo list
-          </Text>
+          <Text style={footerText}>This reminder was sent from your Agenda.dev todo list</Text>
         </Container>
       </Body>
     </Html>
@@ -111,7 +107,7 @@ export const ReminderEmail: React.FC<ReminderEmailProps> = ({
 // Updated styles with dark mode support using EmailStyle type
 const main: EmailStyle = {
   backgroundColor: '#f6f6f7',
-  fontFamily: "'Outfit', Helvetica, Arial, sans-serif",
+  fontFamily: "'OpenRunde', Helvetica, Arial, sans-serif",
   margin: '0',
   padding: '0',
   '@media (prefersColorScheme: dark)': {
@@ -133,7 +129,8 @@ const cardStyle: EmailStyle = {
   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
   '@media (prefersColorScheme: dark)': {
     background: '#1a1a1a',
-    boxShadow: '0px 32px 64px -16px rgba(0,0,0,0.30), 0px 16px 32px -8px rgba(0,0,0,0.30), 0px 8px 16px -4px rgba(0,0,0,0.24), 0px 4px 8px -2px rgba(0,0,0,0.24), 0px -8px 16px -1px rgba(0,0,0,0.16), 0px 2px 4px -1px rgba(0,0,0,0.24), 0px 0px 0px 1px rgba(0,0,0,1.00), inset 0px 0px 0px 1px rgba(255,255,255,0.08), inset 0px 1px 0px 0px rgba(255,255,255,0.20)',
+    boxShadow:
+      '0px 32px 64px -16px rgba(0,0,0,0.30), 0px 16px 32px -8px rgba(0,0,0,0.30), 0px 8px 16px -4px rgba(0,0,0,0.24), 0px 4px 8px -2px rgba(0,0,0,0.24), 0px -8px 16px -1px rgba(0,0,0,0.16), 0px 2px 4px -1px rgba(0,0,0,0.24), 0px 0px 0px 1px rgba(0,0,0,1.00), inset 0px 0px 0px 1px rgba(255,255,255,0.08), inset 0px 1px 0px 0px rgba(255,255,255,0.20)',
   },
 };
 
@@ -233,4 +230,4 @@ const footerText: EmailStyle = {
   },
 };
 
-export default ReminderEmail; 
+export default ReminderEmail;

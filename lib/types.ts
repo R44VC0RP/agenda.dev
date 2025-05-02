@@ -1,42 +1,42 @@
 export interface Todo {
-  id: string
-  title: string
-  completed: boolean
-  userId: string
-  workspaceId?: string
-  createdAt: Date
-  updatedAt: Date
-  comments: Comment[]
-  dueDate?: string
-  urgency: number
+  id: string;
+  title: string;
+  completed: boolean;
+  userId: string;
+  workspaceId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  comments: Comment[];
+  dueDate?: string;
+  urgency: number;
 }
 
 export interface Comment {
-  id: string
-  text: string
-  todoId: string
-  userId: string
-  createdAt: Date
+  id: string;
+  text: string;
+  todoId: string;
+  userId: string;
+  createdAt: Date;
   user?: {
-    name: string
-    image: string | null
-  }
+    name: string;
+    image: string | null;
+  };
 }
 
 export interface Workspace {
-  id: string
-  name: string
-  ownerId: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface WorkspaceMember {
-  workspaceId: string
-  userId: string
-  role: 'owner' | 'member'
+  workspaceId: string;
+  userId: string;
+  role: 'owner' | 'member';
   user?: {
-    name: string
-    image?: string | null
-  }
+    name: string;
+    image?: string | null;
+  };
 }

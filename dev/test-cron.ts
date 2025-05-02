@@ -6,7 +6,7 @@
 
 import { config } from 'dotenv';
 config({
-    path: '../.env'
+  path: '../.env',
 });
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -19,8 +19,8 @@ async function checkReminders() {
   try {
     const response = await fetch('http://localhost:3000/api/cron/check-reminders', {
       headers: {
-        'Authorization': `Bearer ${CRON_SECRET}`
-      }
+        Authorization: `Bearer ${CRON_SECRET}`,
+      },
     });
 
     if (!response.ok) {
@@ -48,4 +48,4 @@ setInterval(() => {
 process.on('SIGINT', () => {
   console.log('\n👋 Stopping cron job tester...');
   process.exit(0);
-}); 
+});

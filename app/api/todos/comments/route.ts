@@ -27,38 +27,45 @@ export async function POST(req: Request) {
     // Validate input
     const body = await req.json();
     const validationResult = commentCreateSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
-      return NextResponse.json({ 
-        error: 'Invalid comment data', 
-        details: validationResult.error.format() 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid comment data',
+          details: validationResult.error.format(),
+        },
+        { status: 400 }
+      );
     }
-    
+
     const { todoId, text } = validationResult.data;
 
     const now = new Date();
-    const comment = await db.insert(comments).values({
-      id: uuidv4(),
-      text,
-      todoId,
-      userId: session.user.id,
-      createdAt: now,
-    }).returning();
+    const comment = await db
+      .insert(comments)
+      .values({
+        id: uuidv4(),
+        text,
+        todoId,
+        userId: session.user.id,
+        createdAt: now,
+      })
+      .returning();
 
     // Get user info
-    const user = await db.select({
-      name: users.name,
-      image: users.image
-    })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .then(rows => rows[0]);
+    const user = await db
+      .select({
+        name: users.name,
+        image: users.image,
+      })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .then((rows) => rows[0]);
 
     return NextResponse.json({
       ...comment[0],
       createdAt: now.toISOString(),
-      user: user || null
+      user: user || null,
     });
   } catch (error) {
     console.error('Error creating comment:', error);
@@ -76,17 +83,21 @@ export async function DELETE(req: Request) {
     // Validate input
     const body = await req.json();
     const validationResult = commentDeleteSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
-      return NextResponse.json({ 
-        error: 'Invalid delete request', 
-        details: validationResult.error.format() 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid delete request',
+          details: validationResult.error.format(),
+        },
+        { status: 400 }
+      );
     }
-    
+
     const { todoId, commentId } = validationResult.data;
 
-    await db.delete(comments)
+    await db
+      .delete(comments)
       .where(
         and(
           eq(comments.id, commentId),
@@ -100,4 +111,4 @@ export async function DELETE(req: Request) {
     console.error('Error deleting comment:', error);
     return NextResponse.json({ error: 'Failed to delete comment' }, { status: 500 });
   }
-} 
+}

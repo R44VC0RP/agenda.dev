@@ -38,10 +38,7 @@ export async function GET(req: Request) {
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching user settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch settings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
   }
 }
 
@@ -55,12 +52,15 @@ export async function POST(req: Request) {
     // Validate input
     const body = await req.json();
     const validationResult = settingsSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
-      return NextResponse.json({ 
-        error: 'Invalid settings data', 
-        details: validationResult.error.format() 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid settings data',
+          details: validationResult.error.format(),
+        },
+        { status: 400 }
+      );
     }
 
     const { reminderMinutes, aiSuggestedReminders, weeklyReview, timezone } = validationResult.data;
@@ -72,7 +72,8 @@ export async function POST(req: Request) {
 
     if (existingSettings) {
       // Update existing settings
-      await db.update(userSettings)
+      await db
+        .update(userSettings)
         .set({
           reminderMinutes,
           aiSuggestedReminders,
@@ -97,9 +98,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating user settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to update settings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
-} 
+}

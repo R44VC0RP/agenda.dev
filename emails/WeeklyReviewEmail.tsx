@@ -28,44 +28,27 @@ export const WeeklyReviewEmail: React.FC<WeeklyReviewEmailProps> = ({
 }) => {
   return (
     <Html>
-      <Head>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      </Head>
+      <Head>{/* Custom font link removed to fix Next.js warning */}</Head>
       <Body style={main}>
         <Container style={container}>
           <Section>
             <Text style={heading}>Your Weekly Todo Review</Text>
             <Text style={paragraph}>Hi {userName},</Text>
-            <Text style={paragraph}>
-              Here's your productivity summary for the past week:
-            </Text>
-            
+            <Text style={paragraph}>Here&apos;s your productivity summary for the past week:</Text>
+
             <Section style={statsContainer}>
-              <Text style={statItem}>
-                ✅ Completed Todos: {completedTodos}
-              </Text>
-              <Text style={statItem}>
-                ⏳ Pending Todos: {pendingTodos}
-              </Text>
-              <Text style={statItem}>
-                🎯 Productivity Score: {productivityScore}%
-              </Text>
-              {topCategory && (
-                <Text style={statItem}>
-                  🏆 Most Active Category: {topCategory}
-                </Text>
-              )}
+              <Text style={statItem}>✅ Completed Todos: {completedTodos}</Text>
+              <Text style={statItem}>⏳ Pending Todos: {pendingTodos}</Text>
+              <Text style={statItem}>🎯 Productivity Score: {productivityScore}%</Text>
+              {topCategory && <Text style={statItem}>🏆 Most Active Category: {topCategory}</Text>}
             </Section>
 
-            <Button
-              href="https://agenda.dev/analytics"
-              style={button}
-            >
+            <Button href="https://agenda.dev/analytics" style={button}>
               View Full Analytics
             </Button>
 
             <Hr style={hr} />
-            
+
             <Text style={footer}>
               Sent by Agenda - Your Supercharged Todo List
               <br />
@@ -98,7 +81,7 @@ const heading = {
   lineHeight: '1.3',
   margin: '16px 0',
   color: '#484848',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const paragraph = {
@@ -106,7 +89,7 @@ const paragraph = {
   lineHeight: '1.4',
   color: '#484848',
   margin: '16px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const statsContainer = {
@@ -121,7 +104,7 @@ const statItem = {
   lineHeight: '1.4',
   color: '#484848',
   margin: '8px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
   fontWeight: '500',
 };
 
@@ -135,7 +118,7 @@ const button = {
   display: 'block',
   padding: '12px',
   margin: '24px 0',
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
   fontWeight: '500',
 };
 
@@ -149,12 +132,12 @@ const footer = {
   fontSize: '14px',
   margin: '0',
   textAlign: 'center' as const,
-  fontFamily: '"Outfit", sans-serif',
+  fontFamily: '"OpenRunde", sans-serif',
 };
 
 const unsubscribeLink = {
   color: '#9BA2B0',
   textDecoration: 'underline',
   fontSize: '14px',
-  fontFamily: '"Outfit", sans-serif',
-}; 
+  fontFamily: '"OpenRunde", sans-serif',
+};

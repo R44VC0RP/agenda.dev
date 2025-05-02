@@ -39,12 +39,14 @@ A blazingly fast, feature-rich todo application built with Next.js 13+, React, a
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/R44VC0RP/todo-exon.git
    cd todo-exon
    ```
 
 2. Install dependencies:
+
    ```bash
    bun install
    # or
@@ -52,6 +54,7 @@ A blazingly fast, feature-rich todo application built with Next.js 13+, React, a
    ```
 
 3. Copy the example environment variables:
+
    ```bash
    cp .env.example .env
    ```
@@ -59,6 +62,7 @@ A blazingly fast, feature-rich todo application built with Next.js 13+, React, a
 4. Update the environment variables in `.env` with your values
 
 5. Run the development server:
+
    ```bash
    bun dev
    # or

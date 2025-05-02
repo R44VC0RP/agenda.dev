@@ -27,15 +27,15 @@ interface SendEmailOptions<T extends EmailType> {
 }
 
 const emailComponents: Record<EmailType, FunctionComponent<any>> = {
-  'reminder': ReminderEmail,
+  reminder: ReminderEmail,
   'weekly-review': WeeklyReviewEmail,
 };
 
-export async function sendEmail<T extends EmailType>({ 
-  to, 
-  subject, 
-  type, 
-  data 
+export async function sendEmail<T extends EmailType>({
+  to,
+  subject,
+  type,
+  data,
 }: SendEmailOptions<T>) {
   try {
     const EmailComponent = emailComponents[type];
@@ -56,4 +56,4 @@ export async function sendEmail<T extends EmailType>({
     console.error('Failed to send email:', error);
     return { success: false, error };
   }
-} 
+}

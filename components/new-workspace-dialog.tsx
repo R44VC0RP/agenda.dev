@@ -1,28 +1,24 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { X } from "lucide-react"
+import * as React from 'react';
+import { X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface NewWorkspaceDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (name: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (name: string) => void;
 }
 
-export default function NewWorkspaceDialog({
-  isOpen,
-  onClose,
-  onSubmit
-}: NewWorkspaceDialogProps) {
-  const [name, setName] = React.useState("")
+export default function NewWorkspaceDialog({ isOpen, onClose, onSubmit }: NewWorkspaceDialogProps) {
+  const [name, setName] = React.useState('');
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -47,18 +43,15 @@ export default function NewWorkspaceDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="secondary"
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button
             onClick={() => {
               if (name.trim()) {
-                onSubmit(name.trim())
-                setName("")
-                onClose()
+                onSubmit(name.trim());
+                setName('');
+                onClose();
               }
             }}
             disabled={!name.trim()}
@@ -69,5 +62,5 @@ export default function NewWorkspaceDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+}

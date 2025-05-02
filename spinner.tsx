@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import './spinner.css'
+import './spinner.css';
 
 export function IOSpinner() {
   return (
@@ -18,5 +18,5 @@ export function IOSpinner() {
       <div className="ispinner-blade"></div>
       <div className="ispinner-blade"></div>
     </div>
-  )
+  );
 }

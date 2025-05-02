@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { Toaster as SonnerToaster } from 'sonner'
-import { Check, X } from 'lucide-react'
-import { IOSpinner } from './spinner'
+import { Toaster as SonnerToaster } from 'sonner';
+import { _Check, _X } from 'lucide-react';
+import { _IOSpinner } from './spinner';
 
 export default function ToastProvider() {
   return (
@@ -30,7 +30,7 @@ export default function ToastProvider() {
           height: '40px',
           padding: '0 16px',
           fontSize: '13px',
-          fontFamily: 'Outfit, sans-serif',
+          fontFamily: 'OpenRunde, sans-serif',
           gap: '8px',
           display: 'flex',
           alignItems: 'center',
@@ -43,8 +43,8 @@ export default function ToastProvider() {
           toast: 'group',
           title: 'text-[13px] font-normal text-white',
           error: 'bg-red-500/10 border-red-500/20',
-        }
+        },
       }}
     />
-  )
+  );
 }

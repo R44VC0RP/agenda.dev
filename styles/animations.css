@@ -5,4 +5,64 @@
   100% {
     background-position: -120% 120%;
   }
-} 
+}
+
+/* Smooth chevron rotation animation */
+.chevron-rotate {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  transform: rotate(0deg);
+}
+
+.chevron-rotate.open {
+  transform: rotate(90deg);
+}
+
+/* Smoother height animation for expandable sections */
+@keyframes smoothExpand {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--auto-height, 500px);
+  }
+}
+
+@keyframes smoothCollapse {
+  from {
+    height: var(--auto-height, 500px);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.expand-content {
+  overflow: hidden;
+  height: 0;
+  opacity: 0;
+  border-top: 1px solid #e5e7eb; /* Default gray border */
+  display: block;
+  pointer-events: none;
+  transition: opacity 250ms ease-out;
+}
+
+.dark .expand-content {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.expand-content.open {
+  animation: smoothExpand 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.expand-content:not(.open) {
+  animation: smoothCollapse 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Fix content within the expandable area */
+.expand-content > div {
+  transform: translateZ(0); /* Force GPU acceleration */
+  padding-top: 1px; /* Ensure consistent spacing */
+}

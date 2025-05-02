@@ -8,27 +8,28 @@ export async function POST(req: Request) {
   try {
     // Authentication check
     const cookieStore = await cookies();
-    const session = await auth.api.getSession({
+    const _session = await auth.api.getSession({
       headers: new Headers({
-        cookie: cookieStore.toString()
-      })
+        cookie: cookieStore.toString(),
+      }),
     });
-    
 
     const { text } = await req.json();
+    // Session not used in this endpoint
+    // const session = await getSession();
     const currentDate = new Date();
-    
+
     const systemPrompt = `### Convert Relative Time Expressions to Specific Date & Time Strings  
 
 The current date and time is 
 
-${currentDate.toLocaleString('en-US', { 
+${currentDate.toLocaleString('en-US', {
   month: 'long',
   day: 'numeric',
   year: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
-  hour12: true
+  hour12: true,
 })}
 
 The day of the week is ${currentDate.toLocaleString('en-US', { weekday: 'long' })}
@@ -122,14 +123,10 @@ YOU MUST USE THE <TIME></TIME> TAG TO RETURN THE DATE AND TIME. YOU CANNOT USE A
     return NextResponse.json({
       originalText: text,
       formattedDateTime: dateTimeStr,
-      dateTime: dateTime.toISOString()
+      dateTime: dateTime.toISOString(),
     });
-
   } catch (error) {
     console.error('Error converting date:', error);
-    return NextResponse.json(
-      { error: 'Failed to convert date/time' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to convert date/time' }, { status: 500 });
   }
-} 
+}
