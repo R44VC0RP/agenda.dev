@@ -1,56 +1,56 @@
-import * as React from 'react'
-import { RotateCcw } from 'lucide-react'
-import { convertRelativeDate } from "@/lib/date-utils"
-import { IOSpinner } from "./spinner"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import * as React from 'react';
+import { RotateCcw } from 'lucide-react';
+import { convertRelativeDate } from '@/lib/date-utils';
+import { IOSpinner } from './spinner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface RescheduleDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: (newDate: string) => void
-  currentDate?: string
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (newDate: string) => void;
+  currentDate?: string;
 }
 
-export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDate }: RescheduleDialogProps) {
-  const [dateInput, setDateInput] = React.useState('')
-  const [isLoading, setIsLoading] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
+export default function RescheduleDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  _currentDate,
+}: RescheduleDialogProps) {
+  const [dateInput, setDateInput] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (isOpen) {
-      setDateInput('')
-      setTimeout(() => inputRef.current?.focus(), 100)
+      setDateInput('');
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const handleSubmit = async () => {
-    if (!dateInput.trim()) return
-    
-    setIsLoading(true)
+    if (!dateInput.trim()) return;
+
+    setIsLoading(true);
     try {
-      const result = await convertRelativeDate(dateInput.trim())
-      onConfirm(result.formattedDateTime)
+      const result = await convertRelativeDate(dateInput.trim());
+      onConfirm(result.formattedDateTime);
     } catch (error) {
-      console.error("Failed to convert date:", error)
+      console.error('Failed to convert date:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && dateInput.trim()) {
-      e.preventDefault()
-      await handleSubmit()
+      e.preventDefault();
+      await handleSubmit();
     } else if (e.key === 'Escape') {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -63,7 +63,7 @@ export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDa
             <DialogTitle>Reschedule to:</DialogTitle>
           </div>
         </DialogHeader>
-          
+
         <div className="px-5 pb-5">
           <div className="flex items-center gap-3">
             <input
@@ -81,11 +81,7 @@ export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDa
                 <IOSpinner />
               </div>
             ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!dateInput.trim()}
-                weight="medium"
-              >
+              <Button onClick={handleSubmit} disabled={!dateInput.trim()} weight="medium">
                 Set
               </Button>
             )}
@@ -93,5 +89,5 @@ export default function RescheduleDialog({ isOpen, onClose, onConfirm, currentDa
         </div>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+}

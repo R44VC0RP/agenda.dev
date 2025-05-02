@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+
 - Keyboard shortcuts (Ctrl+Cmd+[1-9]) for quick workspace switching
 - Visual indicators in workspace switcher showing keyboard shortcuts
 - AI-powered reminder system:
@@ -24,6 +25,7 @@
   - Links in settings dialog and footer for easy access
 
 ### Changed
+
 - Improved Settings dialog UI:
   - Made dialog layout more compact and consistent
   - Aligned all controls to the right side
@@ -34,6 +36,7 @@
 - Optimized workspace switching to prevent unnecessary state updates when switching to current workspace
 
 ### Technical
+
 - Integrated GPT-4.1-nano model for natural language processing
 - Implemented structured AI response parsing with validation
 - Consolidated time parsing logic within reminders API for better efficiency
@@ -44,11 +47,13 @@
 - Added email templates using @react-email/components
 
 ## 2023-10-29
+
 - Added timezone support
 - Improved UI for reminders
 - Bug fixes in todo sorting algorithm
 
 ## 2023-10-30
+
 - Added multi-provider authentication (Google, GitHub, Twitter)
 - Implemented account linking capabilities
 - Created dedicated account management UI in settings

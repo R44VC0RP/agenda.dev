@@ -12,10 +12,10 @@ export async function POST() {
     const cookieStore = await cookies();
     const session = await auth.api.getSession({
       headers: new Headers({
-        cookie: cookieStore.toString()
-      })
+        cookie: cookieStore.toString(),
+      }),
     });
-    
+
     // More robust session validation
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,24 +25,16 @@ export async function POST() {
     const existingPersonal = await db
       .select({ id: workspaces.id })
       .from(workspaces)
-      .innerJoin(
-        workspaceMembers,
-        eq(workspaces.id, workspaceMembers.workspaceId)
-      )
-      .where(
-        and(
-          eq(workspaceMembers.userId, session.user.id),
-          eq(workspaces.name, 'Personal')
-        )
-      )
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(and(eq(workspaceMembers.userId, session.user.id), eq(workspaces.name, 'Personal')))
       .limit(1);
 
     // If user already has a personal workspace, return it
     if (existingPersonal.length > 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         id: existingPersonal[0].id,
         name: 'Personal',
-        ownerId: session.user.id
+        ownerId: session.user.id,
       });
     }
 
@@ -71,26 +63,18 @@ export async function POST() {
       await tx
         .update(todos)
         .set({ workspaceId })
-        .where(
-          and(
-            eq(todos.userId, session.user.id),
-            isNull(todos.workspaceId)
-          )
-        );
+        .where(and(eq(todos.userId, session.user.id), isNull(todos.workspaceId)));
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       id: workspaceId,
       name: 'Personal',
       ownerId: session.user.id,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
   } catch (error) {
     console.error('Failed to create personal workspace:', error);
-    return NextResponse.json(
-      { error: 'Failed to create personal workspace' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create personal workspace' }, { status: 500 });
   }
-} 
+}

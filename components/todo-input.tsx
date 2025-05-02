@@ -1,102 +1,102 @@
-"use client"
+'use client';
 
-import { useState, useRef, useEffect, type KeyboardEvent } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import type { Todo } from "@/lib/types"
-import { v4 as uuidv4 } from "uuid"
-import { convertRelativeDate } from "@/lib/date-utils"
-import { IOSpinner } from "./spinner"
-import { ArrowRight } from "lucide-react"
-import { useSession } from "@/lib/auth-client"
-import { AnimatedBorder } from "@/components/ui/animated-border"
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Todo } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
+import { convertRelativeDate } from '@/lib/date-utils';
+import { IOSpinner } from './spinner';
+import { ArrowRight } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
+import { _AnimatedBorder } from '@/components/ui/animated-border';
 
-type InputStep = "text" | "date" | "urgency"
+type InputStep = 'text' | 'date' | 'urgency';
 
 export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => void }) {
-  const [step, setStep] = useState<InputStep>("text")
-  const [text, setText] = useState("")
-  const [date, setDate] = useState("")
-  const [isDateLoading, setIsDateLoading] = useState(false)
-  const [urgency, setUrgency] = useState(3)
-  const [isShiftPressed, setIsShiftPressed] = useState(false)
-  const { data: session } = useSession()
+  const [step, setStep] = useState<InputStep>('text');
+  const [text, setText] = useState('');
+  const [date, setDate] = useState('');
+  const [isDateLoading, setIsDateLoading] = useState(false);
+  const [urgency, setUrgency] = useState(3);
+  const [_isShiftPressed, _setIsShiftPressed] = useState(false);
+  const { data: _session } = useSession();
 
-  const textInputRef = useRef<HTMLInputElement>(null)
-  const dateInputRef = useRef<HTMLInputElement>(null)
-  const urgencyInputRef = useRef<HTMLInputElement>(null)
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const urgencyInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (step === "text") textInputRef.current?.focus()
-    if (step === "date") dateInputRef.current?.focus()
-    if (step === "urgency") urgencyInputRef.current?.focus()
-  }, [step])
+    if (step === 'text') textInputRef.current?.focus();
+    if (step === 'date') dateInputRef.current?.focus();
+    if (step === 'urgency') urgencyInputRef.current?.focus();
+  }, [step]);
 
   // Add keyboard event listener for urgency control
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (step === "urgency") {
-        if (e.key === "ArrowLeft") {
-          e.preventDefault()
-          incrementUrgency(-0.5)
-        } else if (e.key === "ArrowRight") {
-          e.preventDefault()
-          incrementUrgency(0.5)
+      if (step === 'urgency') {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          incrementUrgency(-0.5);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          incrementUrgency(0.5);
         }
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown as any)
-    return () => window.removeEventListener("keydown", handleKeyDown as any)
-  }, [step])
+    window.addEventListener('keydown', handleKeyDown as any);
+    return () => window.removeEventListener('keydown', handleKeyDown as any);
+  }, [step]);
 
   const handleTextSubmit = () => {
     if (text.trim()) {
-      setStep("date")
+      setStep('date');
     }
-  }
+  };
 
   const handleDateSubmit = async () => {
     if (date.trim()) {
-      setIsDateLoading(true)
+      setIsDateLoading(true);
       try {
-        const result = await convertRelativeDate(date.trim())
-        setDate(result.formattedDateTime)
-        setStep("urgency")
+        const result = await convertRelativeDate(date.trim());
+        setDate(result.formattedDateTime);
+        setStep('urgency');
       } catch (error) {
-        console.error("Failed to convert date:", error)
+        console.error('Failed to convert date:', error);
       } finally {
-        setIsDateLoading(false)
+        setIsDateLoading(false);
       }
     }
-  }
+  };
 
   const handleTextKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && text.trim()) {
-      e.preventDefault()
-      handleTextSubmit()
+    if (e.key === 'Enter' && text.trim()) {
+      e.preventDefault();
+      handleTextSubmit();
     }
-  }
+  };
 
   const handleDateKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && date.trim()) {
-      e.preventDefault()
-      await handleDateSubmit()
+    if (e.key === 'Enter' && date.trim()) {
+      e.preventDefault();
+      await handleDateSubmit();
     }
-  }
+  };
 
   const handleUrgencyKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      submitTodo()
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitTodo();
     }
-  }
+  };
 
   const incrementUrgency = (amount: number) => {
     setUrgency((prev) => {
-      const newValue = +(prev + amount).toFixed(1)
-      return Math.min(Math.max(1, newValue), 5)
-    })
-  }
+      const newValue = +(prev + amount).toFixed(1);
+      return Math.min(Math.max(1, newValue), 5);
+    });
+  };
 
   const submitTodo = () => {
     if (text.trim()) {
@@ -110,15 +110,15 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
         updatedAt: new Date(),
         userId: '', // This will be set by the API
         comments: [],
-      })
+      });
 
       // Reset form
-      setText("")
-      setDate("")
-      setUrgency(3)
-      setStep("text")
+      setText('');
+      setDate('');
+      setUrgency(3);
+      setStep('text');
     }
-  }
+  };
 
   return (
     <div className="mb-8">
@@ -133,9 +133,9 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
               onKeyDown={handleTextKeyDown}
               placeholder="what's on your agenda?"
               className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200 text-center"
-              disabled={step !== "text"}
+              disabled={step !== 'text'}
             />
-            {step === "text" && text.trim() && (
+            {step === 'text' && text.trim() && (
               <button
                 onClick={handleTextSubmit}
                 className="md:hidden p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
@@ -146,10 +146,10 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
           </div>
 
           <AnimatePresence>
-            {step !== "text" && (
+            {step !== 'text' && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
+                animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="mt-2 pt-2 border-t border-gray-200 dark:border-white/10"
@@ -165,9 +165,9 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
                       onKeyDown={handleDateKeyDown}
                       placeholder="tomorrow, next week, etc."
                       className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200"
-                      disabled={step !== "date" || isDateLoading}
+                      disabled={step !== 'date' || isDateLoading}
                     />
-                    {step === "date" && date.trim() && !isDateLoading && (
+                    {step === 'date' && date.trim() && !isDateLoading && (
                       <button
                         onClick={handleDateSubmit}
                         className="md:hidden p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
@@ -183,10 +183,10 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
           </AnimatePresence>
 
           <AnimatePresence>
-            {step === "urgency" && (
+            {step === 'urgency' && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
+                animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="mt-2 pt-2 border-t border-gray-200 dark:border-white/10"
@@ -228,5 +228,5 @@ export default function TodoInput({ onAddTodo }: { onAddTodo: (todo: Todo) => vo
         </div>
       </div>
     </div>
-  )
+  );
 }

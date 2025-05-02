@@ -1,97 +1,98 @@
-"use client"
+'use client';
 
-import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import type { Todo } from "@/lib/types"
-import { v4 as uuidv4 } from "uuid"
-import { ArrowRight, ChevronLeft, ChevronRight, Calendar, Clock, ArrowUp } from "lucide-react"
-import { useSession } from "@/lib/auth-client"
-import { IOSpinner } from "./spinner"
-import { AnimatedBorder } from "@/components/ui/animated-border"
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Todo } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
+import { ChevronLeft, ChevronRight, Calendar, Clock, ArrowUp } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
+import { IOSpinner } from './spinner';
+import { _AnimatedBorder } from '@/components/ui/animated-border';
 
 interface Suggestion {
-  type: "date" | "time" | "datetime"
-  value: string
-  display: string
+  type: 'date' | 'time' | 'datetime';
+  value: string;
+  display: string;
 }
 
 interface AITodoInputProps {
-  onAddTodo: (todo: Todo) => void
+  onAddTodo: (todo: Todo) => void;
 }
 
 export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
-  const [inputValue, setInputValue] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [pendingFields, setPendingFields] = useState<string[]>([])
-  const [collectedValues, setCollectedValues] = useState<Record<string, string>>({})
-  const [urgency, setUrgency] = useState(3)
-  const [conversationId, setConversationId] = useState<string>(() => uuidv4())
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [currentPrompt, setCurrentPrompt] = useState<string>("")
-  const [todoTitle, setTodoTitle] = useState<string>("")
-  
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { data: session } = useSession()
+  const [inputValue, setInputValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingFields, setPendingFields] = useState<string[]>([]);
+  const [collectedValues, setCollectedValues] = useState<Record<string, string>>({});
+  const [urgency, setUrgency] = useState(3);
+  const [conversationId, setConversationId] = useState<string>(() => uuidv4());
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [currentPrompt, setCurrentPrompt] = useState<string>('');
+  const [todoTitle, setTodoTitle] = useState<string>('');
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
 
   // Focus the input field on first render
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus();
     }
-  }, [])
+  }, []);
 
   const extractSuggestions = (html: string): Suggestion[] => {
-    const suggestionRegex = /<suggestion type="(date|time|datetime)" value="([^"]+)">([^<]+)<\/suggestion>/g
-    const matches = [...html.matchAll(suggestionRegex)]
-    
-    if (matches.length === 0) return []
-    
-    return matches.map(match => ({
-      type: match[1] as "date" | "time" | "datetime",
+    const suggestionRegex =
+      /<suggestion type="(date|time|datetime)" value="([^"]+)">([^<]+)<\/suggestion>/g;
+    const matches = [...html.matchAll(suggestionRegex)];
+
+    if (matches.length === 0) return [];
+
+    return matches.map((match) => ({
+      type: match[1] as 'date' | 'time' | 'datetime',
       value: match[2],
       display: match[3],
-    }))
-  }
-  
+    }));
+  };
+
   const resetAndFocus = () => {
-    setInputValue("")
-    setCollectedValues({})
-    setPendingFields([])
-    setSuggestions([])
-    setTodoTitle("")
-    setCurrentPrompt("")
-    setUrgency(3)
-    setConversationId(uuidv4())
+    setInputValue('');
+    setCollectedValues({});
+    setPendingFields([]);
+    setSuggestions([]);
+    setTodoTitle('');
+    setCurrentPrompt('');
+    setUrgency(3);
+    setConversationId(uuidv4());
     if (inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus();
     }
-  }
+  };
 
   const handleSubmit = async (e?: React.FormEvent, suggestionValue?: string) => {
-    if (e) e.preventDefault()
-    
+    if (e) e.preventDefault();
+
     // Don't submit if already processing
-    if (isProcessing) return
-    
-    const valueToSubmit = suggestionValue || inputValue
-    
+    if (isProcessing) return;
+
+    const valueToSubmit = suggestionValue || inputValue;
+
     // Don't submit if empty
-    if (!valueToSubmit.trim() && !pendingFields.includes("urgency")) return
-    
+    if (!valueToSubmit.trim() && !pendingFields.includes('urgency')) return;
+
     // If we're collecting urgency specifically
-    if (pendingFields.includes("urgency") && pendingFields.length === 1) {
-      await handleFieldSubmit("urgency", urgency.toString())
-      return
+    if (pendingFields.includes('urgency') && pendingFields.length === 1) {
+      await handleFieldSubmit('urgency', urgency.toString());
+      return;
     }
-    
-    setIsProcessing(true)
-    
+
+    setIsProcessing(true);
+
     try {
       // Call API route to process the todo
-      const response = await fetch("/api/parse-todo", {
-        method: "POST",
+      const response = await fetch('/api/parse-todo', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message: valueToSubmit,
@@ -99,46 +100,46 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
           collectedValues,
           pendingFields,
         }),
-      })
-      
+      });
+
       if (!response.ok) {
-        throw new Error("Failed to process todo")
+        throw new Error('Failed to process todo');
       }
-      
-      const data = await response.json()
-      
+
+      const data = await response.json();
+
       // Extract title if present
       if (data.values?.title && !todoTitle) {
-        setTodoTitle(data.values.title)
+        setTodoTitle(data.values.title);
       }
-      
+
       // Extract suggestions from HTML if any
-      const extractedSuggestions = extractSuggestions(data.html || "")
-      setSuggestions(extractedSuggestions.length > 0 ? extractedSuggestions : [])
-      
+      const extractedSuggestions = extractSuggestions(data.html || '');
+      setSuggestions(extractedSuggestions.length > 0 ? extractedSuggestions : []);
+
       // Set prompt message - use follow_up if available
-      setCurrentPrompt(data.text || "")
-      
+      setCurrentPrompt(data.text || '');
+
       // Update pending fields
       if (data.stillNeeded && data.stillNeeded.length > 0) {
-        setPendingFields(data.stillNeeded)
+        setPendingFields(data.stillNeeded);
       } else {
-        setPendingFields([])
+        setPendingFields([]);
       }
-      
+
       // Update collected values
       if (data.values) {
-        setCollectedValues(prev => ({
+        setCollectedValues((prev) => ({
           ...prev,
           ...data.values,
-        }))
-        
+        }));
+
         // If we got an urgency, update the urgency state
         if (data.values.urgency) {
-          setUrgency(parseFloat(data.values.urgency))
+          setUrgency(parseFloat(data.values.urgency));
         }
       }
-      
+
       // Check if todo is complete
       if (data.isComplete) {
         // Create and add todo
@@ -153,30 +154,30 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
           userId: session?.user?.id || '',
           comments: [],
           workspaceId: undefined,
-        }
-        
-        onAddTodo(newTodo)
-        
+        };
+
+        onAddTodo(newTodo);
+
         // Reset the form
-        setTimeout(resetAndFocus, 500)
+        setTimeout(resetAndFocus, 500);
       }
     } catch (error) {
-      console.error("❌ Error processing todo:", error)
-      setCurrentPrompt("Something went wrong. Please try again.")
+      console.error('❌ Error processing todo:', error);
+      setCurrentPrompt('Something went wrong. Please try again.');
     } finally {
-      setIsProcessing(false)
-      setInputValue("")
+      setIsProcessing(false);
+      setInputValue('');
     }
-  }
-  
+  };
+
   const handleFieldSubmit = async (field: string, value: string) => {
-    setIsProcessing(true)
-    
+    setIsProcessing(true);
+
     try {
-      const response = await fetch("/api/parse-todo", {
-        method: "POST",
+      const response = await fetch('/api/parse-todo', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message: value,
@@ -185,45 +186,45 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
             ...collectedValues,
             [field]: value,
           },
-          pendingFields: pendingFields.filter(f => f !== field),
+          pendingFields: pendingFields.filter((f) => f !== field),
           currentField: field,
         }),
-      })
-      
+      });
+
       if (!response.ok) {
-        throw new Error("Failed to process field")
+        throw new Error('Failed to process field');
       }
-      
-      const data = await response.json()
-      
+
+      const data = await response.json();
+
       // Update prompt
-      setCurrentPrompt(data.text || `Thanks for providing the ${field}.`)
-      
+      setCurrentPrompt(data.text || `Thanks for providing the ${field}.`);
+
       // Update pending fields
       if (data.stillNeeded && data.stillNeeded.length > 0) {
-        setPendingFields(data.stillNeeded)
+        setPendingFields(data.stillNeeded);
       } else {
-        setPendingFields([])
+        setPendingFields([]);
       }
-      
+
       // Extract suggestions from HTML if any
-      const extractedSuggestions = extractSuggestions(data.html || "")
-      setSuggestions(extractedSuggestions.length > 0 ? extractedSuggestions : [])
-      
+      const extractedSuggestions = extractSuggestions(data.html || '');
+      setSuggestions(extractedSuggestions.length > 0 ? extractedSuggestions : []);
+
       // Update collected values
       if (data.values) {
-        setCollectedValues(prev => ({
+        setCollectedValues((prev) => ({
           ...prev,
           ...data.values,
           [field]: value,
-        }))
-        
+        }));
+
         // If we got an urgency, update the urgency state
         if (data.values.urgency) {
-          setUrgency(parseFloat(data.values.urgency))
+          setUrgency(parseFloat(data.values.urgency));
         }
       }
-      
+
       // Check if todo is complete
       if (data.isComplete) {
         // Create and add todo
@@ -238,59 +239,59 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
           userId: session?.user?.id || '',
           comments: [],
           workspaceId: undefined,
-        }
-        
-        onAddTodo(newTodo)
-        
+        };
+
+        onAddTodo(newTodo);
+
         // Reset the form
-        setTimeout(resetAndFocus, 500)
+        setTimeout(resetAndFocus, 500);
       }
     } catch (error) {
-      console.error(`❌ Error processing ${field}:`, error)
-      setCurrentPrompt(`Something went wrong. Please try again.`)
+      console.error(`❌ Error processing ${field}:`, error);
+      setCurrentPrompt(`Something went wrong. Please try again.`);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
-  
+  };
+
   const incrementUrgency = (amount: number) => {
     setUrgency((prev) => {
-      const newValue = +(prev + amount).toFixed(1)
-      return Math.min(Math.max(1, newValue), 5)
-    })
-  }
-  
-  const handleUrgencySubmit = () => {
-    handleFieldSubmit("urgency", urgency.toString())
-  }
+      const newValue = +(prev + amount).toFixed(1);
+      return Math.min(Math.max(1, newValue), 5);
+    });
+  };
 
-  const isCollectingDetails = todoTitle && (suggestions.length > 0 || pendingFields.length > 0)
+  const handleUrgencySubmit = () => {
+    handleFieldSubmit('urgency', urgency.toString());
+  };
+
+  const isCollectingDetails = todoTitle && (suggestions.length > 0 || pendingFields.length > 0);
 
   const validateAndFormatDate = (dateStr?: string): string | undefined => {
     if (!dateStr) return undefined;
-    
+
     try {
       // Try to parse the date
       const date = new Date(dateStr);
-      
+
       // Check if it's a valid date
       if (isNaN(date.getTime())) {
-        console.error("Invalid date format:", dateStr);
+        console.error('Invalid date format:', dateStr);
         return undefined;
       }
-      
+
       // If it's already in ISO format and has time component, return as is
       if (dateStr.includes('T') && dateStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
         return dateStr;
       }
-      
+
       // Otherwise, convert to ISO format
       return date.toISOString();
     } catch (error) {
-      console.error("Error parsing date:", error);
+      console.error('Error parsing date:', error);
       return undefined;
     }
-  }
+  };
 
   return (
     <div className="mb-8">
@@ -321,7 +322,9 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                 placeholder="what's on your agenda?"
                 className="flex-1 bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] transition-colors duration-200 text-center no-inner-border"
                 style={{ border: 'none' }}
-                disabled={isProcessing || (pendingFields.includes("urgency") && pendingFields.length === 1)}
+                disabled={
+                  isProcessing || (pendingFields.includes('urgency') && pendingFields.length === 1)
+                }
                 // Remove the onFocus handler that was causing issues
               />
               <button
@@ -343,13 +346,15 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
             {todoTitle && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className={`${isCollectingDetails ? "mb-4" : "mt-2 border-t border-gray-200 dark:border-white/10 pt-2"}`}
+                className={`${isCollectingDetails ? 'mb-4' : 'mt-2 border-t border-gray-200 dark:border-white/10 pt-2'}`}
               >
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full border border-gray-300 dark:border-white/30 mr-2"></div>
-                  <p className="text-[15px] font-medium text-gray-800 dark:text-white/90">{todoTitle}</p>
+                  <p className="text-[15px] font-medium text-gray-800 dark:text-white/90">
+                    {todoTitle}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -360,7 +365,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
             {suggestions.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="flex flex-wrap items-center gap-2 mb-4"
               >
@@ -394,10 +399,10 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
 
           {/* Secondary input for additional details - moved below suggestions */}
           <AnimatePresence>
-            {isCollectingDetails && !pendingFields.includes("urgency") && (
+            {isCollectingDetails && !pendingFields.includes('urgency') && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="border-t border-gray-200 dark:border-white/10 pt-4"
               >
@@ -415,7 +420,7 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
 
           {/* Urgency Field - Only show when urgency is the only field needed */}
           <AnimatePresence>
-            {pendingFields.includes("urgency") && pendingFields.length === 1 && (
+            {pendingFields.includes('urgency') && pendingFields.length === 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -438,15 +443,15 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
                       readOnly
                       className="w-12 text-center text-gray-900 dark:text-white text-[15px] bg-transparent border-none outline-none"
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          handleUrgencySubmit()
-                        } else if (e.key === "ArrowLeft") {
-                          e.preventDefault()
-                          incrementUrgency(-0.5)
-                        } else if (e.key === "ArrowRight") {
-                          e.preventDefault()
-                          incrementUrgency(0.5)
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleUrgencySubmit();
+                        } else if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          incrementUrgency(-0.5);
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          incrementUrgency(0.5);
                         }
                       }}
                     />
@@ -470,5 +475,5 @@ export default function AITodoInput({ onAddTodo }: AITodoInputProps) {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

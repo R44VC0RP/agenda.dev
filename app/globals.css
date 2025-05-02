@@ -4,46 +4,62 @@
 
 @font-face {
   font-family: 'OpenRunde';
-  src: local('OpenRunde Regular'), local('OpenRunde-Regular'),
-       url('/fonts/OpenRunde-Regular.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Regular.woff') format('woff');
+  src:
+    local('OpenRunde Regular'),
+    local('OpenRunde-Regular'),
+    url('/fonts/OpenRunde-Regular.woff2') format('woff2'),
+    url('/fonts/OpenRunde-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
   font-family: 'OpenRunde';
-  src: local('OpenRunde Medium'), local('OpenRunde-Medium'),
-       url('/fonts/OpenRunde-Medium.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Medium.woff') format('woff');
+  src:
+    local('OpenRunde Medium'),
+    local('OpenRunde-Medium'),
+    url('/fonts/OpenRunde-Medium.woff2') format('woff2'),
+    url('/fonts/OpenRunde-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
   font-family: 'OpenRunde';
-  src: local('OpenRunde Semibold'), local('OpenRunde-Semibold'),
-       url('/fonts/OpenRunde-Semibold.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Semibold.woff') format('woff');
+  src:
+    local('OpenRunde Semibold'),
+    local('OpenRunde-Semibold'),
+    url('/fonts/OpenRunde-Semibold.woff2') format('woff2'),
+    url('/fonts/OpenRunde-Semibold.woff') format('woff');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
   font-family: 'OpenRunde';
-  src: local('OpenRunde Bold'), local('OpenRunde-Bold'),
-       url('/fonts/OpenRunde-Bold.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Bold.woff') format('woff');
+  src:
+    local('OpenRunde Bold'),
+    local('OpenRunde-Bold'),
+    url('/fonts/OpenRunde-Bold.woff2') format('woff2'),
+    url('/fonts/OpenRunde-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @keyframes highlight {
@@ -58,7 +74,6 @@
 .highlight {
   animation: highlight 2s ease-out;
 }
-
 
 /* Empty space where removed keyframes were */
 
@@ -84,7 +99,7 @@ form input {
 }
 
 /* Target the todo input field specifically, but allow container border */
-.group input[type="text"],
+.group input[type='text'],
 .no-inner-border {
   border: none !important;
   outline: none !important;
@@ -160,7 +175,9 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.5s ease, background 0.5s ease; /* Transitions for both opacity and background */
+  transition:
+    opacity 0.5s ease,
+    background 0.5s ease; /* Transitions for both opacity and background */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -169,16 +186,17 @@ form input {
 :root:not(.dark) .todo-input-container::before {
   z-index: -2;
   /* Duplicated gradient to make it perfectly seamless when looping */
-  background: linear-gradient(90deg, 
-    #ff8420 0%, 
-    #ff6b59 12.5%, 
-    #ff4d8b 25%, 
-    #ff6b59 37.5%, 
+  background: linear-gradient(
+    90deg,
+    #ff8420 0%,
+    #ff6b59 12.5%,
+    #ff4d8b 25%,
+    #ff6b59 37.5%,
     #ff8420 50%,
-    #ff8420 50%, 
-    #ff6b59 62.5%, 
-    #ff4d8b 75%, 
-    #ff6b59 87.5%, 
+    #ff8420 50%,
+    #ff6b59 62.5%,
+    #ff4d8b 75%,
+    #ff6b59 87.5%,
     #ff8420 100%
   );
   background-size: 200% 100%; /* 200% with the duplicated gradient ensures no visual jumps */
@@ -210,7 +228,9 @@ form input {
   /* Pause the animation rather than stopping it */
   animation-play-state: paused;
   /* Add transition for the background-color property */
-  transition: background 0.5s ease, opacity 0.5s ease;
+  transition:
+    background 0.5s ease,
+    opacity 0.5s ease;
 }
 
 :root:not(.dark) .todo-input-container:focus-within::after {
@@ -225,7 +245,9 @@ form input {
   border-radius: 14px;
   inset: -2px;
   opacity: 0;
-  transition: opacity 0.5s ease, background 0.5s ease; /* Transitions for both opacity and background */
+  transition:
+    opacity 0.5s ease,
+    background 0.5s ease; /* Transitions for both opacity and background */
   pointer-events: none;
   z-index: -1; /* Ensure they're behind content */
 }
@@ -234,16 +256,17 @@ form input {
 .dark .todo-input-container::before {
   z-index: -2;
   /* Duplicated gradient to make it perfectly seamless when looping */
-  background: linear-gradient(90deg, 
-    #7c5aff 0%, 
-    #6b72e8 12.5%, 
-    #30A5CE 25%, 
-    #6b72e8 37.5%, 
+  background: linear-gradient(
+    90deg,
+    #7c5aff 0%,
+    #6b72e8 12.5%,
+    #30a5ce 25%,
+    #6b72e8 37.5%,
     #7c5aff 50%,
-    #7c5aff 50%, 
-    #6b72e8 62.5%, 
-    #30A5CE 75%, 
-    #6b72e8 87.5%, 
+    #7c5aff 50%,
+    #6b72e8 62.5%,
+    #30a5ce 75%,
+    #6b72e8 87.5%,
     #7c5aff 100%
   );
   background-size: 200% 100%; /* 200% with the duplicated gradient ensures no visual jumps */
@@ -275,7 +298,9 @@ form input {
   /* Pause the animation rather than stopping it */
   animation-play-state: paused;
   /* Add transition for the background-color property */
-  transition: background 0.5s ease, opacity 0.5s ease;
+  transition:
+    background 0.5s ease,
+    opacity 0.5s ease;
 }
 
 .dark .todo-input-container:focus-within::after {
@@ -293,12 +318,24 @@ form input {
 }
 
 @keyframes gradientSlide {
-  to { background-position: 200% center; }
+  to {
+    background-position: 200% center;
+  }
 }
 
 body {
-  font-family: "OpenRunde", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-    "Helvetica Neue", sans-serif;
+  font-family:
+    'OpenRunde',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
   overscroll-behavior-y: none;
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -322,61 +359,61 @@ body {
   .shadow-sm {
     box-shadow: var(--shadow-sm);
   }
-  
+
   .shadow-md {
     box-shadow: var(--shadow-md);
   }
-  
+
   .shadow-lg {
     box-shadow: var(--shadow-lg);
   }
-  
+
   .shadow-xl {
     box-shadow: var(--shadow-xl);
   }
-  
+
   .shadow-inner {
     box-shadow: var(--shadow-inner);
   }
-  
+
   .shadow-accent {
     box-shadow: var(--shadow-accent);
   }
-  
+
   .dark .shadow-glow-sm {
     box-shadow: var(--glow-sm);
   }
-  
+
   .dark .shadow-glow-md {
     box-shadow: var(--glow-md);
   }
-  
+
   .dark .shadow-glow-accent {
     box-shadow: var(--glow-accent);
   }
-  
+
   /* Combined shadow effects */
   .shadow-card {
     @apply shadow-md;
   }
-  
+
   .dark .shadow-card {
     box-shadow: var(--shadow-md), var(--glow-sm);
   }
-  
+
   .shadow-card-hover {
     @apply shadow-lg transition-all duration-300 ease-in-out;
   }
-  
+
   .dark .shadow-card-hover {
     box-shadow: var(--shadow-lg), var(--glow-md);
     transition: all 0.3s ease-in-out;
   }
-  
+
   .shadow-button {
     box-shadow: var(--shadow-sm);
   }
-  
+
   .dark .shadow-button {
     box-shadow: var(--shadow-md), var(--glow-sm);
   }
@@ -386,14 +423,24 @@ body {
   /* Custom CSS Variables for Border Animations */
   :root {
     --border-color-custom: hsl(30 95% 55%);
-    --hover-gradient-custom: linear-gradient(90deg, hsl(30 95% 55%), hsl(340 85% 55%), hsl(30 95% 55%));
+    --hover-gradient-custom: linear-gradient(
+      90deg,
+      hsl(30 95% 55%),
+      hsl(340 85% 55%),
+      hsl(30 95% 55%)
+    );
   }
-  
+
   .dark {
     --border-color-custom: hsl(260 80% 65%);
-    --hover-gradient-custom: linear-gradient(90deg, hsl(260 80% 65%), hsl(190 80% 55%), hsl(260 80% 65%));
+    --hover-gradient-custom: linear-gradient(
+      90deg,
+      hsl(260 80% 65%),
+      hsl(190 80% 55%),
+      hsl(260 80% 65%)
+    );
   }
-  
+
   :root {
     /* Base colors */
     --background: 0 0% 100%;
@@ -421,7 +468,7 @@ body {
     --chart-4: 40 90% 60%;
     --chart-5: 150 80% 40%;
     --radius: 0.5rem;
-    
+
     /* Sidebar colors */
     --sidebar-background: 30 30% 99%;
     --sidebar-foreground: 30 10% 20%;
@@ -431,7 +478,7 @@ body {
     --sidebar-accent-foreground: 30 60% 30%;
     --sidebar-border: 30 13% 91%;
     --sidebar-ring: 30 95% 50%;
-    
+
     /* Shadow values - light mode */
     --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 1px 1px rgba(0, 0, 0, 0.04);
     --shadow-md: 0px 2px 4px rgba(0, 0, 0, 0.05), 0px 4px 8px rgba(0, 0, 0, 0.1);
@@ -440,7 +487,7 @@ body {
     --shadow-inner: inset 0px 2px 4px rgba(0, 0, 0, 0.05), inset 0px 1px 2px rgba(0, 0, 0, 0.03);
     --shadow-accent: 0px 4px 16px rgba(255, 126, 50, 0.25), 0px 8px 24px rgba(255, 126, 50, 0.15);
   }
-  
+
   .dark {
     /* Base colors */
     --background: 230 25% 8%;
@@ -467,7 +514,7 @@ body {
     --chart-3: 330 80% 65%;
     --chart-4: 40 90% 65%;
     --chart-5: 150 80% 45%;
-    
+
     /* Sidebar colors */
     --sidebar-background: 230 30% 12%;
     --sidebar-foreground: 210 20% 98%;
@@ -477,7 +524,7 @@ body {
     --sidebar-accent-foreground: 260 80% 90%;
     --sidebar-border: 230 25% 18%;
     --sidebar-ring: 260 80% 65%;
-    
+
     /* Shadow values - dark mode */
     --shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.5), 0px 2px 4px rgba(0, 0, 0, 0.4);
     --shadow-md: 0px 3px 6px rgba(0, 0, 0, 0.5), 0px 6px 12px rgba(0, 0, 0, 0.4);
@@ -485,7 +532,7 @@ body {
     --shadow-xl: 0px 20px 32px rgba(0, 0, 0, 0.5), 0px 32px 64px rgba(0, 0, 0, 0.4);
     --shadow-inner: inset 0px 2px 6px rgba(0, 0, 0, 0.6), inset 0px 1px 3px rgba(0, 0, 0, 0.5);
     --shadow-accent: 0px 6px 20px rgba(124, 90, 255, 0.35), 0px 3px 12px rgba(124, 90, 255, 0.25);
-    
+
     /* Glow effects */
     --glow-sm: 0px 0px 6px rgba(124, 90, 255, 0.15), 0px 0px 2px rgba(124, 90, 255, 0.1);
     --glow-md: 0px 0px 12px rgba(124, 90, 255, 0.2), 0px 0px 4px rgba(124, 90, 255, 0.15);
@@ -507,14 +554,14 @@ body {
 
 @theme inline {
   @keyframes shine {
-  0% {
-    background-position: 0% 0%;
+    0% {
+      background-position: 0% 0%;
     }
-  50% {
-    background-position: 100% 100%;
+    50% {
+      background-position: 100% 100%;
     }
-  to {
-    background-position: 0% 0%;
+    to {
+      background-position: 0% 0%;
     }
   }
 }

@@ -18,4 +18,4 @@ export default function GoogleSignInButton() {
       <span>Sign in with Google</span>
     </button>
   );
-} 
+}

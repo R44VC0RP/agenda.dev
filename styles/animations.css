@@ -9,7 +9,7 @@
 
 /* Smooth chevron rotation animation */
 .chevron-rotate {
-  transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
   transform: rotate(0deg);
 }
@@ -20,13 +20,21 @@
 
 /* Smoother height animation for expandable sections */
 @keyframes smoothExpand {
-  from { height: 0; }
-  to { height: var(--auto-height, 500px); }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--auto-height, 500px);
+  }
 }
 
 @keyframes smoothCollapse {
-  from { height: var(--auto-height, 500px); }
-  to { height: 0; }
+  from {
+    height: var(--auto-height, 500px);
+  }
+  to {
+    height: 0;
+  }
 }
 
 .expand-content {
@@ -44,13 +52,13 @@
 }
 
 .expand-content.open {
-  animation: smoothExpand 300ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation: smoothExpand 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   opacity: 1;
   pointer-events: auto;
 }
 
 .expand-content:not(.open) {
-  animation: smoothCollapse 250ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation: smoothCollapse 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Fix content within the expandable area */

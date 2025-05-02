@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     }
 
     console.log('🔍 Checking for pending reminders...');
-    
+
     // Get all pending reminders that are due (using UTC)
     const currentUTCTime = new Date();
     console.log('⏰ Current UTC time:', currentUTCTime.toISOString());
@@ -25,21 +25,16 @@ export async function GET(req: Request) {
         reminder: reminders,
         user: {
           email: users.email,
-          name: users.name
+          name: users.name,
         },
         settings: {
-          timezone: userSettings.timezone
-        }
+          timezone: userSettings.timezone,
+        },
       })
       .from(reminders)
       .leftJoin(users, eq(reminders.userId, users.id))
       .leftJoin(userSettings, eq(reminders.userId, userSettings.userId))
-      .where(
-        and(
-          eq(reminders.status, 'pending'),
-          lte(reminders.reminderTime, currentUTCTime)
-        )
-      );
+      .where(and(eq(reminders.status, 'pending'), lte(reminders.reminderTime, currentUTCTime)));
 
     console.log(`📬 Found ${pendingReminders.length} reminders to send`);
 
@@ -48,7 +43,9 @@ export async function GET(req: Request) {
       pendingReminders.map(async ({ reminder, user, settings }) => {
         // Skip reminders for users without email
         if (!user?.email) {
-          console.warn(`Skipping reminder ${reminder.id}: No email found for user ${reminder.userId}`);
+          console.warn(
+            `Skipping reminder ${reminder.id}: No email found for user ${reminder.userId}`
+          );
           return reminder.id;
         }
 
@@ -57,7 +54,7 @@ export async function GET(req: Request) {
 
         // Send the email
         try {
-          const emailResult = await sendEmail({
+          await sendEmail({
             to: user.email,
             subject: `you need to do: ${reminder.title.toLowerCase()}`,
             type: 'reminder',
@@ -66,8 +63,8 @@ export async function GET(req: Request) {
               dueDate: new Date(localTime),
               urgency: 100, // Since this is a reminder, we'll set it to 100% urgency
               comments: [], // No comments needed for reminder emails
-              userTimeZone: userTimezone
-            }
+              userTimeZone: userTimezone,
+            },
           });
 
           // Update reminder status to sent
@@ -75,7 +72,7 @@ export async function GET(req: Request) {
             .update(reminders)
             .set({
               status: 'sent',
-              updatedAt: new Date()
+              updatedAt: new Date(),
             })
             .where(eq(reminders.id, reminder.id));
 
@@ -88,8 +85,8 @@ export async function GET(req: Request) {
     );
 
     // Count successes and failures
-    const succeeded = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
 
     console.log(`✅ Successfully sent ${succeeded} reminders`);
     if (failed > 0) {
@@ -99,13 +96,10 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       sent: succeeded,
-      failed
+      failed,
     });
   } catch (error) {
     console.error('Error in reminder check cron job:', error);
-    return NextResponse.json(
-      { error: 'Failed to process reminders' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process reminders' }, { status: 500 });
   }
-} 
+}

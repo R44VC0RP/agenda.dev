@@ -19,6 +19,6 @@ export async function convertRelativeDate(relativeDate: string): Promise<{
   return {
     originalText: data.originalText,
     formattedDateTime: data.formattedDateTime,
-    dateTime: new Date(data.dateTime)
+    dateTime: new Date(data.dateTime),
   };
-} 
+}

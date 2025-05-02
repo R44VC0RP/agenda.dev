@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { FaComments } from "react-icons/fa"
+import { FaComments } from 'react-icons/fa';
 
 export default function FeedbackWidget() {
   return (
-    <a 
+    <a
       href="https://exontodo.featurebase.app"
       target="_blank"
       rel="noopener noreferrer"
@@ -14,5 +14,5 @@ export default function FeedbackWidget() {
     >
       <FaComments className="h-4 w-4" />
     </a>
-  )
-} 
+  );
+}

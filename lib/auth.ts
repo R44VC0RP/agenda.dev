@@ -1,31 +1,31 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "./db";
-import * as schema from "./db/schema";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { db } from './db';
+import * as schema from './db/schema';
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set");
+  throw new Error('DATABASE_URL is not set');
 }
 
 if (!process.env.BETTER_AUTH_SECRET) {
-  throw new Error("BETTER_AUTH_SECRET is not set");
+  throw new Error('BETTER_AUTH_SECRET is not set');
 }
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error("Google OAuth credentials are not set");
+  throw new Error('Google OAuth credentials are not set');
 }
 
 if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
-  throw new Error("GitHub OAuth credentials are not set");
+  throw new Error('GitHub OAuth credentials are not set');
 }
 
 if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
-  throw new Error("Twitter OAuth credentials are not set");
+  throw new Error('Twitter OAuth credentials are not set');
 }
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
     schema,
     usePlural: true, // This will automatically map tables to their plural form (e.g., user -> users)
   }),
@@ -51,4 +51,4 @@ export const auth = betterAuth({
       enabled: false,
     },
   },
-}); 
+});

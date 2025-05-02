@@ -18,4 +18,4 @@ export default function GithubSignInButton() {
       <span>Sign in with GitHub</span>
     </button>
   );
-} 
+}

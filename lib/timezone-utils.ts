@@ -34,19 +34,23 @@ export function formatInTimezone(date: Date | string, timezone: string = 'UTC'):
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-    timeZoneName: 'short'
+    timeZoneName: 'short',
   });
 }
 
 /**
  * Converts a date from one timezone to another
  */
-export function convertTimezone(date: Date | string, fromTimezone: string, toTimezone: string): Date {
+export function convertTimezone(
+  date: Date | string,
+  fromTimezone: string,
+  toTimezone: string
+): Date {
   const d = new Date(date);
   const fromOffset = getTimezoneOffset(d, fromTimezone);
   const toOffset = getTimezoneOffset(d, toTimezone);
   const diffMinutes = fromOffset - toOffset;
-  
+
   return new Date(d.getTime() + diffMinutes * 60 * 1000);
 }
 
@@ -57,4 +61,4 @@ function getTimezoneOffset(date: Date, timezone: string): number {
   const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
   const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
   return (utcDate.getTime() - tzDate.getTime()) / (60 * 1000);
-} 
+}

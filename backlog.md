@@ -23,15 +23,15 @@
    [ ] Implement background job for reminder checking -> vercel cron job (need to modify vercel.json)
    [ ] Configure email sending service -> using resend -> email.ts
 
-
 Cleanup
 
 - Only make this feature available for users who are logged in (we will limit it to 20 reminders per month)
 - Users who are not logged in should not be able to see the reminders or use the !remindme command
+
 ### Recent Updates:
+
 - Enhanced reminder creation with AI-generated structured content (title, description, time, summary)
 - Integrated natural language time parsing directly in the reminders API
 - Added proper validation for AI responses
 - Updated database schema to store more detailed reminder information
 - Improved error handling and user feedback in the comment system
- 
