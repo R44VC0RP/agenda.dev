@@ -161,7 +161,11 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
 
         // Helper function to generate a content hash for comparison
         const getContentHash = (todo: Todo) => {
-          return `${todo.title?.toLowerCase().trim() || ''}_${todo.dueDate || ''}_${todo.urgency || 1}`;
+          if (!todo) return 'invalid_todo';
+          const title = todo.title?.toLowerCase?.().trim() || '';
+          const dueDate = todo.dueDate || '';
+          const urgency = todo.urgency !== undefined ? todo.urgency : 1;
+          return `${title}_${dueDate}_${urgency}`;
         };
 
         // Helper function to update a remote todo
@@ -177,9 +181,12 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
           }
         };
 
+        // Ensure remoteTodos is always an array before trying to map it
+        const validRemoteTodos = Array.isArray(remoteTodos) ? remoteTodos : [];
+
         // Create content map of remote todos for comparison
         const remoteContentMap = new Map(
-          remoteTodos.map((todo: Todo) => [getContentHash(todo), todo])
+          validRemoteTodos.map((todo: Todo) => [getContentHash(todo), todo])
         );
 
         // Find local-only todos that don't exist on server by content
@@ -221,9 +228,12 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
         const finalRes = await fetch('/api/todos');
         const finalTodos = (await finalRes.json()) as Todo[];
 
+        // Ensure finalTodos is always an array
+        const validFinalTodos = Array.isArray(finalTodos) ? finalTodos : [];
+
         // Dedupe todos by content hash before setting state
         const uniqueTodos = Array.from(
-          new Map(finalTodos.map((todo) => [getContentHash(todo), todo])).values()
+          new Map(validFinalTodos.map((todo) => [getContentHash(todo), todo])).values()
         );
 
         setTodos(uniqueTodos);

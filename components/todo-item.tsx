@@ -422,12 +422,12 @@ export default function TodoItem({
                     <span className="mr-1 text-gray-400 dark:text-white/50">Urgency:</span>
                     <div className="flex items-center gap-1">
                       <span className="font-medium text-gray-400 dark:text-white/50">
-                        {todo.urgency.toFixed(1)}
+                        {(todo.urgency !== undefined ? todo.urgency : 1).toFixed(1)}
                       </span>
                       <div className="w-8 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
                           style={{
-                            width: `${(todo.urgency / 5) * 100}%`,
+                            width: `${((todo.urgency !== undefined ? todo.urgency : 1) / 5) * 100}%`,
                             height: '100%',
                             background: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='0' x2='100%25' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%237c5aff'/%3E%3Cstop offset='50%25' stop-color='%237152ff'/%3E%3Cstop offset='100%25' stop-color='%236c47ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23a)'/%3E%3C/svg%3E")`,
                           }}
