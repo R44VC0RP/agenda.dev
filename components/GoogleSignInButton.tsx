@@ -2,6 +2,7 @@ import { FaGoogle } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
 export default function GoogleSignInButton() {
+  const _handleTauriAuth = null;
   const handleGoogleSignIn = async () => {
     await signIn.social({
       provider: 'google',

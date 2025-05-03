@@ -2,6 +2,7 @@ import { FaTwitter } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
 export default function TwitterSignInButton() {
+  const _handleTauriAuth = null;
   const handleTwitterSignIn = async () => {
     await signIn.social({
       provider: 'twitter',

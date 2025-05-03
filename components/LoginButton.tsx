@@ -31,6 +31,7 @@ export default function LoginButton() {
   const { data: session } = useSession();
   const [showSettings, setShowSettings] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
+  const _debugAuth = false;
 
   if (session?.user) {
     const initials = session.user.name

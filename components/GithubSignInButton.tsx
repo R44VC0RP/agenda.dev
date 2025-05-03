@@ -2,6 +2,7 @@ import { FaGithub } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
 export default function GithubSignInButton() {
+  const _handleTauriAuth = null;
   const handleGithubSignIn = async () => {
     await signIn.social({
       provider: 'github',

@@ -22,6 +22,15 @@
         "decorations": true,
         "transparent": false,
         "center": true
+      },
+      {
+        "width": 800,
+        "height": 600,
+        "decorations": true,
+        "url": "about:blank",
+        "title": "OAuth Login",
+        "visible": false,
+        "label": "oauth"
       }
     ],
     "security": {
