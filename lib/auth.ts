@@ -36,10 +36,22 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // Enable passkey support for Google
+      passkeys: {
+        enabled: true,
+        // Use "conditional UI" to check for passkeys first
+        conditional: true,
+      },
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      // Enable passkey support for GitHub
+      passkeys: {
+        enabled: true,
+        // Use "conditional UI" to check for passkeys first
+        conditional: true,
+      },
     },
     twitter: {
       clientId: process.env.TWITTER_CLIENT_ID,
@@ -50,5 +62,11 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: false,
     },
+  },
+  passkeys: {
+    // Global passkey settings
+    enabled: true,
+    relyingPartyName: 'Agenda',
+    relyingPartyId: process.env.NEXT_PUBLIC_APP_URL || 'https://agenda.dev',
   },
 });

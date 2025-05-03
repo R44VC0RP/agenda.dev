@@ -48,8 +48,10 @@ fn open_oauth_window(app_handle: tauri::AppHandle, auth_url: String) -> Result<(
   let window = app_handle.get_webview_window("oauth").ok_or("Failed to get OAuth window")?;
   window.show().map_err(|e| e.to_string())?;
   
-  // Navigate to the auth URL
-  window.eval(&format!("window.location.replace('{}');", auth_url))
+  // Navigate to the auth URL - properly escape the URL to prevent JS injection
+  let escaped_url = serde_json::to_string(&auth_url)
+      .map_err(|e| format!("Failed to serialize auth URL: {}", e.to_string()))?;
+  window.eval(&format!("window.location.replace({});", escaped_url))
       .map_err(|e| e.to_string())?;
       
   Ok(())
