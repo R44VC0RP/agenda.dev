@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { Trash2, Calendar, MessageSquare, Send, User, Check } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import DeleteConfirmation from './delete-confirmation';
+// Delete confirmation removed
 import RescheduleDialog from './reschedule-dialog';
 import { formatDate } from '@/lib/utils';
 
@@ -46,7 +46,7 @@ export default function TodoTable({
 }: TodoTableProps) {
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  // Removed delete confirmation
   const [showRescheduleDialog, setShowRescheduleDialog] = useState<string | null>(null);
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
@@ -153,7 +153,7 @@ export default function TodoTable({
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setShowDeleteConfirm(todo.id)}
+                      onClick={() => onDelete(todo.id)}
                       className="p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors duration-200"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -165,14 +165,7 @@ export default function TodoTable({
                       <Calendar className="w-4 h-4" />
                     </button>
                   </div>
-                  <DeleteConfirmation
-                    isOpen={showDeleteConfirm === todo.id}
-                    onClose={() => setShowDeleteConfirm(null)}
-                    onConfirm={() => {
-                      onDelete(todo.id);
-                      setShowDeleteConfirm(null);
-                    }}
-                  />
+                  {/* Delete confirmation removed */}
                   <RescheduleDialog
                     isOpen={showRescheduleDialog === todo.id}
                     onClose={() => setShowRescheduleDialog(null)}

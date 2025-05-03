@@ -414,43 +414,15 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
       return;
     }
 
-    // Track the delete operation with a unique ID
-    const deleteOperationId = `delete_${Date.now()}`;
-    todoToDelete._deleteOperationId = deleteOperationId;
-
     // Create a copy to keep in case we need to restore
     const todoCopy = { ...todoToDelete };
 
     // Optimistic update - remove from state immediately
     setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
 
-    // Notify user
-    toast.success('Todo deleted', {
-      id: deleteOperationId,
-      description: todoToDelete.title,
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          // Restore the todo if user clicks undo
-          setTodos((currentTodos) => [...currentTodos, todoCopy]);
-          // Cancel the server delete if it hasn't completed yet
-          todoToDelete._deleteOperationId = null;
-        },
-      },
-    });
-
     // If logged in, sync with server
     if (session?.user) {
       try {
-        // Small delay to allow for undo
-        await new Promise((resolve) => setTimeout(resolve, 200));
-
-        // Check if delete was cancelled via undo
-        if (todoToDelete._deleteOperationId !== deleteOperationId) {
-          console.log('Delete operation was cancelled by user');
-          return;
-        }
-
         console.log('Sending delete request to server');
         const response = await fetch('/api/todos', {
           method: 'DELETE',
@@ -466,18 +438,8 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
       } catch (error) {
         console.error('Failed to delete todo on server:', error);
 
-        // Check if the delete was canceled via undo first
-        if (todoToDelete._deleteOperationId !== deleteOperationId) {
-          return; // Deletion was already canceled, no need to restore
-        }
-
         // Restore the todo if server delete failed
         setTodos((currentTodos) => [...currentTodos, todoCopy]);
-
-        // Notify user of error
-        toast.error('Failed to delete todo', {
-          description: 'The item has been restored.',
-        });
       }
     }
   };
