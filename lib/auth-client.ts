@@ -162,8 +162,11 @@ const isPasskeySupported = (): boolean => {
   return (
     window.PublicKeyCredential &&
     'isConditionalMediationAvailable' in window.PublicKeyCredential &&
-    // For macOS platform passkey support
-    window.navigator.platform.includes('Mac')
+    // Platform support check: supports macOS, Windows, and other compatible platforms
+    (window.navigator.platform.includes('Mac') ||
+      window.navigator.platform.includes('Win') ||
+      // Use feature detection for platform authenticator availability
+      'isUserVerifyingPlatformAuthenticatorAvailable' in window.PublicKeyCredential)
   );
 };
 
