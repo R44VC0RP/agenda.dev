@@ -2,7 +2,7 @@ mod desktop_storage;
 
 use desktop_storage::{AppConfig, ConfigError, load_config, save_config};
 use log::{error, info};
-use tauri::Runtime;
+use tauri::{Runtime, WindowEvent, Manager, Emitter};
 
 #[tauri::command]
 async fn get_preferences<R: Runtime>(
@@ -38,6 +38,25 @@ async fn save_preferences<R: Runtime>(
     }
 }
 
+#[derive(serde::Serialize, Clone)]
+struct AuthUrlPayload {
+  url: String,
+}
+
+#[tauri::command]
+fn open_oauth_window(app_handle: tauri::AppHandle, auth_url: String) -> Result<(), String> {
+  let window = app_handle.get_webview_window("oauth").ok_or("Failed to get OAuth window")?;
+  window.show().map_err(|e| e.to_string())?;
+  
+  // Navigate to the auth URL - properly escape the URL to prevent JS injection
+  let escaped_url = serde_json::to_string(&auth_url)
+      .map_err(|e| format!("Failed to serialize auth URL: {}", e.to_string()))?;
+  window.eval(&format!("window.location.replace({});", escaped_url))
+      .map_err(|e| e.to_string())?;
+      
+  Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -67,12 +86,39 @@ pub fn run() {
         }
       }
       
+      // Set up OAuth window event handler
+      let app_handle = app.handle().clone();
+      if let Some(oauth_window) = app.get_webview_window("oauth") {
+        oauth_window.on_window_event(move |event| {
+          if let WindowEvent::CloseRequested { api, .. } = event {
+            // Just hide the window instead of closing it
+            if let Some(window) = app_handle.get_webview_window("oauth") {
+              let _ = window.hide();
+            }
+            api.prevent_close();
+          }
+        });
+      }
+      
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
         get_preferences, 
-        save_preferences
+        save_preferences,
+        open_oauth_window
     ])
+    .on_page_load(|window, payload| {
+      // Only process for the OAuth window
+      if window.label() == "oauth" {
+        let url = payload.url().to_string();
+        
+        // Check if this is a callback URL with tokens (contains fragments or query params)
+        if url.contains("#access_token=") || url.contains("?code=") || url.contains("&state=") {
+          let _ = window.emit("auth-callback", AuthUrlPayload { url });
+          let _ = window.hide(); // Hide window after successful auth
+        }
+      }
+    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { passkey } from 'better-auth/plugins/passkey';
 import { db } from './db';
 import * as schema from './db/schema';
 
@@ -51,4 +52,22 @@ export const auth = betterAuth({
       enabled: false,
     },
   },
+  plugins: [
+    passkey({
+      // Global passkey settings
+      relyingPartyName: 'Agenda',
+      relyingPartyId: 'localhost',
+      // Disable conditional UI to avoid auto-prompting issues
+      conditional: false,
+      // Enable passkeys for all providers
+      providers: ['github', 'google'],
+      // Configure cross-device authentication - but don't specify attachment
+      authenticatorSelection: {
+        // Ensure user verification for security
+        userVerification: 'preferred',
+        // Allow for multi-device credentials
+        residentKey: 'preferred',
+      },
+    }),
+  ],
 });

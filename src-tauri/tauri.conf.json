@@ -22,10 +22,19 @@
         "decorations": true,
         "transparent": false,
         "center": true
+      },
+      {
+        "width": 800,
+        "height": 600,
+        "decorations": true,
+        "url": "about:blank",
+        "title": "OAuth Login",
+        "visible": false,
+        "label": "oauth"
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.agenda.dev https://*.vercel-insights.com https://*.vercel.app"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.agenda.dev https://*.vercel-insights.com https://*.vercel.app https://github.com https://*.github.com https://accounts.google.com https://*.google.com https://api.twitter.com https://*.twitter.com https://www.gstatic.com; form-action 'self' https://github.com https://accounts.google.com https://api.twitter.com; object-src 'self'; media-src 'self'; frame-src 'self' https://accounts.google.com https://*.google.com"
     },
     "withGlobalTauri": true
   },
