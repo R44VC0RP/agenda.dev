@@ -17,14 +17,15 @@ if (typeof window !== 'undefined') {
   // Use dynamic imports to load Tauri API
   const loadTauriApis = async () => {
     try {
-      // Import the unified Tauri API to avoid module resolution issues
-      const tauriApi = await import('@tauri-apps/api');
+      // Import from specific modules to avoid undefined functions
+      const tauriCore = await import('@tauri-apps/api/tauri');
+      const tauriEvent = await import('@tauri-apps/api/event');
 
-      // Get invoke from the core module
-      invoke = tauriApi.core.invoke;
+      // Get invoke from the tauri module
+      invoke = tauriCore.invoke;
 
       // Get listen from the event module
-      listen = tauriApi.event.listen;
+      listen = tauriEvent.listen;
 
       if (!invoke || !listen) {
         throw new Error('Tauri API functions not found');
