@@ -93,16 +93,34 @@ fs.writeFileSync(path.join(appDir, 'page.tsx'), indexPage);
 copyRecursive('components', componentsDir);
 
 // Copy required lib files
-copyRecursive('lib/utils.ts', path.join(libDir, 'utils.ts'));
-copyRecursive('lib/tauri-api.ts', path.join(libDir, 'tauri-api.ts'));
-copyRecursive('lib/types.ts', path.join(libDir, 'types.ts'));
-copyRecursive('lib/date-utils.ts', path.join(libDir, 'date-utils.ts'));
-copyRecursive('lib/timezone-utils.ts', path.join(libDir, 'timezone-utils.ts'));
+// Define critical files that must exist for the build to succeed
+const criticalFiles = [
+  ['lib/utils.ts', path.join(libDir, 'utils.ts')],
+  ['lib/tauri-api.ts', path.join(libDir, 'tauri-api.ts')],
+  ['lib/types.ts', path.join(libDir, 'types.ts')],
+  ['lib/date-utils.ts', path.join(libDir, 'date-utils.ts')],
+  ['lib/timezone-utils.ts', path.join(libDir, 'timezone-utils.ts')],
+  ['lib/auth-client.ts', path.join(libDir, 'auth-client.ts')],
+  ['lib/auth.ts', path.join(libDir, 'auth.ts')],
+  ['auth-schema.ts', path.join(tempDir, 'auth-schema.ts')],
+];
 
-// Copy the real auth files
-copyRecursive('lib/auth-client.ts', path.join(libDir, 'auth-client.ts'));
-copyRecursive('lib/auth.ts', path.join(libDir, 'auth.ts'));
-copyRecursive('auth-schema.ts', path.join(tempDir, 'auth-schema.ts'));
+// Copy critical files and validate their existence
+let missingFiles = [];
+for (const [source, dest] of criticalFiles) {
+  if (!fs.existsSync(path.join(process.cwd(), source))) {
+    missingFiles.push(source);
+  } else {
+    copyRecursive(source, dest);
+  }
+}
+
+// Exit if any critical files are missing
+if (missingFiles.length > 0) {
+  console.error('Error: The following critical files are missing:');
+  missingFiles.forEach((file) => console.error(`- ${file}`));
+  process.exit(1);
+}
 
 // Copy styles
 copyRecursive('styles', stylesDir);
