@@ -338,6 +338,8 @@ body {
     sans-serif;
   overscroll-behavior-y: none;
   padding-bottom: env(safe-area-inset-bottom);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Add support for iOS keyboard behaviors */
@@ -539,7 +541,7 @@ body {
     --glow-accent: 0px 0px 16px rgba(124, 90, 255, 0.4), 0px 0px 8px rgba(124, 90, 255, 0.3);
   }
   .theme {
-    --animate-shine: shine var(--duration) infinite linear;
+    --animate-shine: shine-theme var(--duration, 2s) infinite linear;
   }
 }
 
@@ -552,16 +554,15 @@ body {
   }
 }
 
-@theme inline {
-  @keyframes shine {
-    0% {
-      background-position: 0% 0%;
-    }
-    50% {
-      background-position: 100% 100%;
-    }
-    to {
-      background-position: 0% 0%;
-    }
+/* Keyframes for shine animation */
+@keyframes shine-theme {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  to {
+    background-position: 0% 0%;
   }
 }

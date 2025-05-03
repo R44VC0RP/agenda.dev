@@ -1,70 +1,98 @@
 import { createAuthClient } from 'better-auth/react';
 import { passkeyClient } from 'better-auth/client/plugins';
 
-// Dynamic imports for Tauri API to avoid errors during SSR
-let invoke: any;
-let listen: any;
+// Define noop implementations that do nothing but return valid values
+// to avoid errors when running in web environment
+const noopInvoke = async () => null;
+const noopListen = async () => () => {};
 
-// Dynamic imports for WebAuthn API
+// Default to noop implementations
+let invoke: any = noopInvoke;
+let listen: any = noopListen;
+
+// For WebAuthn API
 let webauthnSupported = false;
 let webauthnJson: any;
 
-// Export promise to track Tauri API loading status
-export let tauriReady: Promise<void>;
+// Export a resolved promise by default - no waiting needed in web mode
+export let tauriReady: Promise<void> = Promise.resolve();
 
-// This will be executed only in the browser, not during SSR
+// Only execute this in the browser, not during SSR
 if (typeof window !== 'undefined') {
-  // Use dynamic imports to load Tauri API
-  const loadTauriApis = async () => {
-    // Skip entirely if not in Tauri environment
-    if (typeof window === 'undefined' || !window.__TAURI_IPC__) {
-      console.log('Not in Tauri environment, skipping API imports');
-      return;
+  try {
+    // Check if this is the Tauri desktop app
+    const isTauriApp = window.__TAURI_IPC__ !== undefined;
+
+    if (isTauriApp) {
+      // We're in Tauri - try to load the APIs
+      console.log('Tauri environment detected');
+
+      // Create a new promise for loading the Tauri APIs
+      tauriReady = new Promise<void>(async (resolve) => {
+        try {
+          // We're being very careful here to avoid letting errors bubble up
+          // First, verify the __TAURI_IPC__ global exists
+          if (window.__TAURI_IPC__) {
+            // This is the safest approach - we'll manually set up properties to avoid
+            // any direct imports which cause build errors
+            invoke = async (...args: any[]) => {
+              try {
+                // Call the global Tauri API directly
+                return await window.__TAURI__.invoke(...args);
+              } catch (e) {
+                console.error('Tauri invoke error:', e);
+                return null;
+              }
+            };
+
+            // For listen, we do the same pattern
+            listen = async (event: string, callback: any) => {
+              try {
+                return await window.__TAURI__.event.listen(event, callback);
+              } catch (e) {
+                console.error('Tauri listen error:', e);
+                return () => {}; // Return noop unlisten function
+              }
+            };
+          }
+        } catch (e) {
+          // If anything goes wrong, quietly fall back to noop implementations
+          console.warn('Failed to set up Tauri APIs:', e);
+          invoke = noopInvoke;
+          listen = noopListen;
+        }
+
+        // Always resolve the promise to prevent hanging
+        resolve();
+      });
+    } else {
+      console.log('Web environment detected, not loading Tauri APIs');
     }
 
-    try {
-      // Only attempt to import Tauri API in Tauri environment
-      const tauriCore = await import('@tauri-apps/api/tauri');
-      const tauriEvent = await import('@tauri-apps/api/event');
+    // WebAuthn APIs (works in any browser)
+    const loadWebAuthnApis = async () => {
+      try {
+        webauthnSupported =
+          window.PublicKeyCredential !== undefined &&
+          typeof window.PublicKeyCredential === 'function';
 
-      // Get invoke from the tauri module
-      invoke = tauriCore.invoke;
-
-      // Get listen from the event module
-      listen = tauriEvent.listen;
-
-      if (!invoke || !listen) {
-        throw new Error('Tauri API functions not found');
+        if (webauthnSupported) {
+          webauthnJson = await import('@github/webauthn-json');
+        }
+      } catch (e) {
+        console.warn('WebAuthn API import failed:', e);
       }
-    } catch (e) {
-      console.error('Tauri API import failed:', e);
-      // Don't provide fallback in production
-    }
-  };
+    };
 
-  // Load WebAuthn APIs
-  const loadWebAuthnApis = async () => {
-    try {
-      // Check if the browser supports WebAuthn
-      webauthnSupported =
-        window.PublicKeyCredential !== undefined &&
-        typeof window.PublicKeyCredential === 'function';
-
-      // Load GitHub's WebAuthn JSON library
-      if (webauthnSupported) {
-        webauthnJson = await import('@github/webauthn-json');
-      }
-    } catch (e) {
-      console.warn('WebAuthn API import failed:', e);
-    }
-  };
-
-  // Initialize and export promises for API loading
-  tauriReady = loadTauriApis();
-  loadWebAuthnApis();
+    // Always try to load WebAuthn
+    loadWebAuthnApis();
+  } catch (e) {
+    // Global error handler - make sure nothing leaks out
+    console.error('Error in Tauri/WebAuthn setup:', e);
+  }
 } else {
-  // Provide a resolved promise for SSR environments
-  tauriReady = Promise.resolve();
+  // SSR environment
+  console.log('Server-side rendering, Tauri/WebAuthn not applicable');
 }
 
 // Detect if we're running in Tauri

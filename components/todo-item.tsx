@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import RescheduleDialog from './reschedule-dialog';
 import { ShineBorder } from '@/components/magicui/shine-border';
 import ReminderComment from './ReminderComment';
+import DeleteConfirmation from './delete-confirmation';
 import { useSession } from '@/lib/auth-client';
 
 interface TodoItemProps {
@@ -186,6 +187,7 @@ export default function TodoItem({
   const [commentText, setCommentText] = useState('');
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const expandedContentRef = useRef<HTMLDivElement>(null);
   const [isReminderCommand, setIsReminderCommand] = useState(false);
@@ -337,6 +339,14 @@ export default function TodoItem({
               }}
               currentDate={todo.dueDate}
             />
+            <DeleteConfirmation
+              isOpen={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              onConfirm={() => {
+                onDelete(todo.id);
+                setShowDeleteConfirm(false);
+              }}
+            />
           </div>
 
           <div className="p-4 cursor-pointer relative z-1" onClick={toggleExpand}>
@@ -401,7 +411,7 @@ export default function TodoItem({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDelete(todo.id);
+                          setShowDeleteConfirm(true);
                         }}
                         className="absolute right-6 text-gray-400 hover:text-gray-600 dark:text-white/50 dark:hover:text-white/80 transition-colors z-[2]"
                       >

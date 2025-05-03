@@ -157,7 +157,19 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
     const syncWithServer = async () => {
       try {
         const res = await fetch('/api/todos');
-        const remoteTodos = (await res.json()) as Todo[];
+        let remoteTodos;
+
+        try {
+          remoteTodos = await res.json();
+          // If response is not an array or is undefined, set to empty array
+          if (!Array.isArray(remoteTodos)) {
+            console.warn('API returned non-array response:', remoteTodos);
+            remoteTodos = [];
+          }
+        } catch (parseError) {
+          console.error('Failed to parse API response:', parseError);
+          remoteTodos = [];
+        }
 
         // Helper function to generate a content hash for comparison
         const getContentHash = (todo: Todo) => {
@@ -226,14 +238,23 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
 
         // Fetch the latest state from server after all syncs and updates
         const finalRes = await fetch('/api/todos');
-        const finalTodos = (await finalRes.json()) as Todo[];
+        let finalTodos;
 
-        // Ensure finalTodos is always an array
-        const validFinalTodos = Array.isArray(finalTodos) ? finalTodos : [];
+        try {
+          finalTodos = await finalRes.json();
+          // Ensure finalTodos is always an array
+          if (!Array.isArray(finalTodos)) {
+            console.warn('Final API response not an array:', finalTodos);
+            finalTodos = [];
+          }
+        } catch (parseError) {
+          console.error('Failed to parse final API response:', parseError);
+          finalTodos = [];
+        }
 
         // Dedupe todos by content hash before setting state
         const uniqueTodos = Array.from(
-          new Map(validFinalTodos.map((todo) => [getContentHash(todo), todo])).values()
+          new Map(finalTodos.map((todo) => [getContentHash(todo), todo])).values()
         );
 
         setTodos(uniqueTodos);
