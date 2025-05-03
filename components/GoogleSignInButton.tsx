@@ -2,12 +2,15 @@ import { FaGoogle } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
 export default function GoogleSignInButton() {
-  const _handleTauriAuth = null;
   const handleGoogleSignIn = async () => {
-    await signIn.social({
-      provider: 'google',
-      callbackURL: '/', // Redirect to dashboard after sign in
-    });
+    try {
+      await signIn.social({
+        provider: 'google',
+        callbackURL: '/', // Redirect to dashboard after sign in
+      });
+    } catch (error) {
+      console.error('Google sign in failed:', error);
+    }
   };
 
   return (

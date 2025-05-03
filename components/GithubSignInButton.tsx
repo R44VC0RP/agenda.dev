@@ -2,12 +2,15 @@ import { FaGithub } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
 export default function GithubSignInButton() {
-  const _handleTauriAuth = null;
   const handleGithubSignIn = async () => {
-    await signIn.social({
-      provider: 'github',
-      callbackURL: '/', // Redirect after sign in
-    });
+    try {
+      await signIn.social({
+        provider: 'github',
+        callbackURL: '/', // Redirect after sign in
+      });
+    } catch (error) {
+      console.error('GitHub sign in failed:', error);
+    }
   };
 
   return (

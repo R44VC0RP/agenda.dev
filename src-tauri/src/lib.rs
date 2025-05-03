@@ -2,7 +2,7 @@ mod desktop_storage;
 
 use desktop_storage::{AppConfig, ConfigError, load_config, save_config};
 use log::{error, info};
-use tauri::{Manager, Runtime, WindowEvent};
+use tauri::{Runtime, WindowEvent, Manager, Emitter};
 
 #[tauri::command]
 async fn get_preferences<R: Runtime>(
@@ -38,14 +38,14 @@ async fn save_preferences<R: Runtime>(
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 struct AuthUrlPayload {
   url: String,
 }
 
 #[tauri::command]
 fn open_oauth_window(app_handle: tauri::AppHandle, auth_url: String) -> Result<(), String> {
-  let window = app_handle.get_window("oauth").ok_or("Failed to get OAuth window")?;
+  let window = app_handle.get_webview_window("oauth").ok_or("Failed to get OAuth window")?;
   window.show().map_err(|e| e.to_string())?;
   
   // Navigate to the auth URL
@@ -85,12 +85,12 @@ pub fn run() {
       }
       
       // Set up OAuth window event handler
-      let app_handle = app.handle();
-      if let Some(oauth_window) = app.get_window("oauth") {
+      let app_handle = app.handle().clone();
+      if let Some(oauth_window) = app.get_webview_window("oauth") {
         oauth_window.on_window_event(move |event| {
           if let WindowEvent::CloseRequested { api, .. } = event {
             // Just hide the window instead of closing it
-            if let Some(window) = app_handle.get_window("oauth") {
+            if let Some(window) = app_handle.get_webview_window("oauth") {
               let _ = window.hide();
             }
             api.prevent_close();
@@ -112,7 +112,7 @@ pub fn run() {
         
         // Check if this is a callback URL with tokens (contains fragments or query params)
         if url.contains("#access_token=") || url.contains("?code=") || url.contains("&state=") {
-          let _ = window.emit_all("auth-callback", AuthUrlPayload { url });
+          let _ = window.emit("auth-callback", AuthUrlPayload { url });
           let _ = window.hide(); // Hide window after successful auth
         }
       }
