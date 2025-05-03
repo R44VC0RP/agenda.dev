@@ -9,6 +9,9 @@ export interface Todo {
   comments: Comment[];
   dueDate?: string;
   urgency: number;
+  // Operation tracking properties - internal use only (not in DB)
+  _lastUpdateId?: string;
+  _deleteOperationId?: string | null;
 }
 
 export interface Comment {

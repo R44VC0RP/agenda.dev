@@ -300,7 +300,7 @@ export default function TodoItem({
   return (
     <div
       id={`todo-${todo.id}`}
-      className={`bg-white dark:bg-card rounded-[12px] transition-all duration-300 ease-in-out border border-gray-100 dark:border-gray-800 overflow-hidden relative`}
+      className={`bg-white dark:bg-card rounded-[12px] transition-all duration-300 ease-in-out border border-gray-100 dark:border-gray-800 overflow-hidden relative w-full`}
       style={{
         boxShadow: isHovered
           ? '0 8px 20px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.05)'
@@ -310,6 +310,7 @@ export default function TodoItem({
         transformStyle: 'preserve-3d',
         backfaceVisibility: 'hidden',
         perspective: '1000px',
+        maxWidth: 'calc(100% - 8px)',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

@@ -1,0 +1,23 @@
+{
+  "name": "agenda.dev",
+  "short_name": "agenda",
+  "description": "Simple and efficient todo management app",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#7c5aff",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

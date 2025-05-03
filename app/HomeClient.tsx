@@ -405,23 +405,79 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
   };
 
   const deleteTodo = async (id: string) => {
-    // Optimistic update
-    const deletedTodo = todos.find((t) => t.id === id);
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    console.log('Deleting todo:', id);
 
+    // Find the todo to delete before removing it (for potential rollback)
+    const todoToDelete = todos.find((t) => t.id === id);
+    if (!todoToDelete) {
+      console.warn('Attempted to delete non-existent todo with id:', id);
+      return;
+    }
+
+    // Track the delete operation with a unique ID
+    const deleteOperationId = `delete_${Date.now()}`;
+    todoToDelete._deleteOperationId = deleteOperationId;
+
+    // Create a copy to keep in case we need to restore
+    const todoCopy = { ...todoToDelete };
+
+    // Optimistic update - remove from state immediately
+    setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
+
+    // Notify user
+    toast.success('Todo deleted', {
+      id: deleteOperationId,
+      description: todoToDelete.title,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          // Restore the todo if user clicks undo
+          setTodos((currentTodos) => [...currentTodos, todoCopy]);
+          // Cancel the server delete if it hasn't completed yet
+          todoToDelete._deleteOperationId = null;
+        },
+      },
+    });
+
+    // If logged in, sync with server
     if (session?.user) {
       try {
-        await fetch('/api/todos', {
+        // Small delay to allow for undo
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Check if delete was cancelled via undo
+        if (todoToDelete._deleteOperationId !== deleteOperationId) {
+          console.log('Delete operation was cancelled by user');
+          return;
+        }
+
+        console.log('Sending delete request to server');
+        const response = await fetch('/api/todos', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id }),
         });
-      } catch (error) {
-        console.error('Failed to delete todo:', error);
-        // Revert on error
-        if (deletedTodo) {
-          setTodos((prev) => [...prev, deletedTodo]);
+
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
         }
+
+        console.log('Todo successfully deleted on server');
+      } catch (error) {
+        console.error('Failed to delete todo on server:', error);
+
+        // Check if the delete was canceled via undo first
+        if (todoToDelete._deleteOperationId !== deleteOperationId) {
+          return; // Deletion was already canceled, no need to restore
+        }
+
+        // Restore the todo if server delete failed
+        setTodos((currentTodos) => [...currentTodos, todoCopy]);
+
+        // Notify user of error
+        toast.error('Failed to delete todo', {
+          description: 'The item has been restored.',
+        });
       }
     }
   };
@@ -599,78 +655,164 @@ export default function HomeClient({ initialTodos }: HomeClientProps) {
     const { destination, source, draggableId } = result;
 
     // If there's no destination or the item was dropped in its original position
-    if (
-      !destination ||
-      (destination.droppableId === source.droppableId && destination.index === source.index)
-    ) {
+    if (!destination) {
+      console.log('Drag canceled, no destination');
       return;
     }
 
-    // Find the todo that was dragged
-    const todo = todos.find((t) => t.id === draggableId);
-    if (!todo) return;
-
-    // Calculate new due date based on destination column
-    let newDueDate = new Date();
-    if (destination.droppableId.startsWith('desktop')) {
-      const columnIndex = parseInt(destination.droppableId.split('-')[2]);
-      if (columnIndex === 0) {
-        // Today's column - keep current date
-        newDueDate = new Date();
-      } else if (columnIndex === 1) {
-        // Next 7 days column - set to tomorrow
-        newDueDate.setDate(newDueDate.getDate() + 1);
-      } else {
-        // Upcoming column - set to next week
-        newDueDate.setDate(newDueDate.getDate() + 8);
-      }
-    } else if (destination.droppableId.startsWith('tablet')) {
-      const columnIndex = parseInt(destination.droppableId.split('-')[2]);
-      if (columnIndex === 0) {
-        // Today's column
-        newDueDate = new Date();
-      } else {
-        // Upcoming column
-        newDueDate.setDate(newDueDate.getDate() + 1);
-      }
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      console.log('Item dropped in same position, no action needed');
+      return;
     }
 
-    // Update the todo's due date
-    const updatedTodo = {
-      ...todo,
-      dueDate: newDueDate.toISOString(),
+    console.log('Processing drag end:', {
+      draggableId,
+      source: source.droppableId,
+      destination: destination.droppableId,
+    });
+
+    // Find the dragged todo by ID in our current state
+    const draggedTodo = todos.find((t) => t.id === draggableId);
+    if (!draggedTodo) {
+      console.error('Could not find todo with id:', draggableId);
+      return;
+    }
+
+    // Store original due date to rollback if needed
+    const originalDueDate = draggedTodo.dueDate;
+
+    // Calculate new due date based on destination column
+    const today = new Date();
+    let newDueDate: Date;
+
+    // Helper function to determine what date to assign based on column
+    const getDueDateForColumn = (columnId: string, index: number): Date => {
+      const result = new Date();
+
+      // First identify what view we're using - mobile, tablet, or desktop
+      if (columnId === 'mobile-column') {
+        // On mobile, don't change the date if not needed
+        return draggedTodo.dueDate
+          ? new Date(draggedTodo.dueDate)
+          : new Date(today.setHours(today.getHours() + 1));
+      }
+
+      if (columnId.startsWith('tablet')) {
+        const columnIndex = parseInt(columnId.split('-')[2]);
+
+        if (columnIndex === 0) {
+          // Today column
+          return new Date(today.setHours(today.getHours() + 1));
+        } else {
+          // Upcoming - set to tomorrow + some random hours
+          const random = Math.floor(Math.random() * 72); // Up to 3 days
+          return new Date(today.setHours(today.getHours() + 24 + random));
+        }
+      }
+
+      if (columnId.startsWith('desktop')) {
+        const columnIndex = parseInt(columnId.split('-')[2]);
+
+        if (columnIndex === 0) {
+          // Today column - set to later today with some randomness
+          return new Date(today.setHours(today.getHours() + 1 + Math.random() * 4));
+        } else if (columnIndex === 1) {
+          // This week - set to tomorrow + some random days (1-6)
+          const randomDays = 1 + Math.floor(Math.random() * 6);
+          const result = new Date(today);
+          result.setDate(result.getDate() + randomDays);
+          return result;
+        } else {
+          // Future - set to next week or later with randomness
+          const randomDays = 8 + Math.floor(Math.random() * 14);
+          const result = new Date(today);
+          result.setDate(result.getDate() + randomDays);
+          return result;
+        }
+      }
+
+      // Fallback
+      return new Date(today.setHours(today.getHours() + 2));
     };
 
-    // Create new array with updated todo
-    const newTodos = todos.filter((t) => t.id !== draggableId);
-    newTodos.splice(destination.index, 0, updatedTodo);
+    // Get new due date from the destination column
+    newDueDate = getDueDateForColumn(destination.droppableId, destination.index);
 
-    // Update state
-    setTodos(newTodos);
+    console.log(`Setting due date for "${draggedTodo.title}":`, {
+      from: draggedTodo.dueDate,
+      to: newDueDate.toISOString(),
+    });
 
-    // Log the update
-    console.log(
-      `Todo "${todo.title}" moved to ${destination.droppableId} at index ${destination.index}`
-    );
+    // Create a unique ID for this update operation to track it
+    const updateId = Date.now().toString();
 
-    // Update the database after animations finish
+    // Optimistic update: in a single operation to avoid duplicates
+    setTodos((currentTodos) => {
+      // Make a whole new array - no mutation!
+      return currentTodos.map((todo) => {
+        if (todo.id === draggableId) {
+          // Return a new todo object with the updated due date
+          return {
+            ...todo,
+            dueDate: newDueDate.toISOString(),
+            _lastUpdateId: updateId, // Track this update
+          };
+        }
+        return todo;
+      });
+    });
+
+    // If the user is logged in, persist to the server
     if (session?.user) {
+      // Slight delay to let the UI update first
       setTimeout(async () => {
         try {
+          // Validate that the todo still exists and that another update hasn't happened
+          const currentTodo = todos.find((t) => t.id === draggableId);
+          if (
+            !currentTodo ||
+            (currentTodo._lastUpdateId && currentTodo._lastUpdateId !== updateId)
+          ) {
+            console.log('Skipping server update - state has changed since operation began');
+            return;
+          }
+
+          console.log('Persisting todo update to server:', draggableId);
           const res = await fetch('/api/todos', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: draggableId, dueDate: updatedTodo.dueDate }),
+            body: JSON.stringify({
+              id: draggableId,
+              dueDate: newDueDate.toISOString(),
+            }),
           });
-          if (!res.ok) throw new Error('Failed to update todo via drag-and-drop');
+
+          if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+          }
+
           const serverTodo = await res.json();
-          // Sync state with server response
-          setTodos((prev) => prev.map((t) => (t.id === draggableId ? serverTodo : t)));
-          console.log('✅ Todo dueDate updated on server via drag:', serverTodo);
+
+          // Final update with server data
+          setTodos((currentTodos) =>
+            currentTodos.map((todo) =>
+              todo.id === draggableId ? { ...todo, ...serverTodo } : todo
+            )
+          );
         } catch (error) {
-          console.error('❌ Error updating todo via drag:', error);
+          console.error('Failed to update todo on server:', error);
+
+          // Rollback on error
+          setTodos((currentTodos) =>
+            currentTodos.map((todo) =>
+              todo.id === draggableId ? { ...todo, dueDate: originalDueDate } : todo
+            )
+          );
+
+          // Notify user
+          toast.error('Failed to update todo. Please try again.');
         }
-      }, 350);
+      }, 100);
     }
   };
 

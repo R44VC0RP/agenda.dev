@@ -66,19 +66,14 @@ const AnimatedTodoItem = ({
       // disable layout animations during active drag
       {...(!isDragActive && { layoutId: `todo-${todo.id}` })}
       layout={!isDragActive}
-      initial={{ opacity: 0, scale: 0.85, y: 20 }}
+      initial={{ opacity: 0.9 }}
       animate={{
-        opacity: isDraggingItem ? 1 : isInView ? 1 : 0.3,
-        scale: isDraggingItem ? 1 : isInView ? 1 : 0.9,
-        y: isDraggingItem ? 0 : isInView ? 0 : 10,
+        opacity: 1,
       }}
       exit={{
         opacity: 0,
-        scale: 0.85,
-        y: -20,
         transition: {
-          duration: 0.25,
-          ease: [0.4, 0.0, 0.2, 1], // Custom ease curve for smoother exit
+          duration: 0.15,
         },
       }}
       transition={{
@@ -86,14 +81,9 @@ const AnimatedTodoItem = ({
         ...(isDraggingItem
           ? { duration: 0 }
           : {
-              type: 'spring',
-              stiffness: 200,
-              damping: 25,
-              mass: 1,
-              delay: index * 0.02,
-              opacity: { duration: 0.2 },
-              scale: { duration: 0.3 },
-              layout: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] },
+              type: 'tween',
+              duration: 0.15,
+              layout: { duration: 0.15 },
             }),
       }}
       style={{
@@ -276,7 +266,13 @@ export default function TodoList({
     <LayoutGroup id={`column-${columnId}`}>
       <AnimatePresence mode="popLayout" initial={false}>
         {todos.map((todo, index) => (
-          <Draggable key={todo.id} draggableId={todo.id} index={index}>
+          <Draggable
+            key={`${columnId}-${todo.id}`}
+            draggableId={todo.id}
+            index={index}
+            // Disable animations during drag to prevent flicker
+            isDragDisabled={dragActive && !todo.id.includes('being-dragged')}
+          >
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
@@ -284,8 +280,14 @@ export default function TodoList({
                 {...provided.dragHandleProps}
                 style={{
                   ...provided.draggableProps.style,
+                  // Prevent animation jitter
+                  transition: snapshot.isDragging
+                    ? 'none'
+                    : provided.draggableProps.style?.transition,
                   opacity: snapshot.isDragging ? 0.8 : 1,
                 }}
+                data-todo-id={todo.id}
+                data-column-id={columnId}
               >
                 <AnimatedTodoItem
                   todo={todo}
