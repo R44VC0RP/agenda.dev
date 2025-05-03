@@ -46,13 +46,17 @@ fs.copyFileSync('tsconfig.json', path.join(tempDir, 'tsconfig.json'));
 fs.copyFileSync('package.json', path.join(tempDir, 'package.json'));
 fs.copyFileSync('.env', path.join(tempDir, '.env'));
 
-// Create a desktop-specific .env.local file
-const envLocal = `
+// Read from a desktop-specific env file if it exists, or create one
+let envLocal = 'NEXT_PUBLIC_IS_DESKTOP=true\n';
+if (fs.existsSync('.env.desktop')) {
+  envLocal = fs.readFileSync('.env.desktop', 'utf8') + '\n' + envLocal;
+} else {
+  envLocal = `
 # Desktop app environment variables
 NEXT_PUBLIC_BETTER_AUTH_BASE_URL=https://agenda.dev
 BETTER_AUTH_URL=https://agenda.dev
-NEXT_PUBLIC_IS_DESKTOP=true
-`;
+${envLocal}`;
+}
 fs.writeFileSync(path.join(tempDir, '.env.local'), envLocal);
 
 // Copy desktop app pages
@@ -109,35 +113,36 @@ copyRecursive('hooks', hooksDir);
 // Copy public files
 copyRecursive('public', publicDir);
 
-// Create desktop-specific Next.js config
-const nextConfig = `
+// Create desktop-specific Next.js config by extending the existing config
+const desktopNextConfig = `// Import original Next.js config
+import originalConfig from '../next.config.mjs';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
+  ...originalConfig,
+  
+  // Desktop-specific overrides
   output: 'export',
   distDir: '../out',
-  // Ensure trailing slashes for proper linking
-  trailingSlash: true,
+  
   // No basePath for desktop
   basePath: '',
   assetPrefix: '',
+  
+  // Ensure trailing slashes for proper linking
+  trailingSlash: true,
+  
+  // Enhance webpack config to add process polyfill
   webpack(config) {
+    // Start with original webpack config function if it exists
+    const originalWebpack = originalConfig.webpack;
+    if (originalWebpack) {
+      config = originalWebpack(config);
+    }
+    
+    // Add additional desktop-specific polyfills
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      'node:buffer': 'buffer',
-      'node:crypto': 'crypto-browserify',
-      'node:events': 'events',
-      'node:http': 'stream-http',
-      'node:https': 'https-browserify',
-      'node:stream': 'stream-browserify',
       'process': 'process/browser',
     };
     
@@ -148,22 +153,25 @@ const nextConfig = {
 export default nextConfig;
 `;
 
-fs.writeFileSync(path.join(tempDir, 'next.config.mjs'), nextConfig);
+fs.writeFileSync(path.join(tempDir, 'next.config.mjs'), desktopNextConfig);
 
 // Run Next.js build in the temp directory
 console.log('Building desktop app with Next.js...');
+const originalDir = process.cwd();
 try {
   process.chdir(tempDir);
   execSync('bun run next build', { stdio: 'inherit' });
   console.log('Next.js build completed successfully!');
 } catch (error) {
   console.error('Next.js build failed:', error);
+  process.chdir(originalDir);
   process.exit(1);
+} finally {
+  process.chdir(originalDir);
 }
 
 // Ensure index.html is in the right place
 console.log('Finalizing build files...');
-process.chdir(process.cwd());
 
 // Get the correct out directory path
 const outDir = path.join(process.cwd(), 'out');
