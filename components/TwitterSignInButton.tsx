@@ -1,12 +1,21 @@
 import { FaTwitter } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
+/**
+ * Renders a button that initiates Twitter sign-in using a social authentication provider.
+ *
+ * When clicked, attempts to sign in the user via Twitter and redirects to the home page upon success.
+ */
 export default function TwitterSignInButton() {
   const handleTwitterSignIn = async () => {
-    await signIn.social({
-      provider: 'twitter',
-      callbackURL: '/', // Redirect after sign in
-    });
+    try {
+      await signIn.social({
+        provider: 'twitter',
+        callbackURL: '/', // Redirect after sign in
+      });
+    } catch (error) {
+      console.error('Twitter sign in failed:', error);
+    }
   };
 
   return (

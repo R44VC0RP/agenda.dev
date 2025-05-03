@@ -1,12 +1,21 @@
 import { FaGithub } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
+/**
+ * Renders a button that initiates the GitHub social sign-in process when clicked.
+ *
+ * @returns A React element representing the GitHub sign-in button.
+ */
 export default function GithubSignInButton() {
   const handleGithubSignIn = async () => {
-    await signIn.social({
-      provider: 'github',
-      callbackURL: '/', // Redirect after sign in
-    });
+    try {
+      await signIn.social({
+        provider: 'github',
+        callbackURL: '/', // Redirect after sign in
+      });
+    } catch (error) {
+      console.error('GitHub sign in failed:', error);
+    }
   };
 
   return (

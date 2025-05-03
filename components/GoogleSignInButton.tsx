@@ -1,12 +1,21 @@
 import { FaGoogle } from 'react-icons/fa';
 import { signIn } from '@/lib/auth-client';
 
+/**
+ * Renders a button that initiates Google sign-in when clicked.
+ *
+ * Redirects the user to the root path upon successful authentication.
+ */
 export default function GoogleSignInButton() {
   const handleGoogleSignIn = async () => {
-    await signIn.social({
-      provider: 'google',
-      callbackURL: '/', // Redirect to dashboard after sign in
-    });
+    try {
+      await signIn.social({
+        provider: 'google',
+        callbackURL: '/', // Redirect to dashboard after sign in
+      });
+    } catch (error) {
+      console.error('Google sign in failed:', error);
+    }
   };
 
   return (

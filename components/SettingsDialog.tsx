@@ -24,6 +24,14 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Displays a dialog for users to view and update their account settings, including reminder preferences, timezone, email alerts, and legal information.
+ *
+ * The dialog fetches current user settings on mount and allows saving changes. It provides feedback for loading and error states, and organizes settings into sections for linked accounts, email alerts, subscription info, and legal links.
+ *
+ * @param open - Whether the dialog is visible.
+ * @param onOpenChange - Callback to handle dialog open state changes.
+ */
 export default function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { toast } = useToast();
   const [, setIsFetching] = useState(false);
@@ -56,8 +64,8 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         }
         const data = await response.json();
         setSettings(data);
-      } catch (_error) {
-        console.error('Error fetching settings:');
+      } catch (error) {
+        console.error('Error fetching settings:', error);
         toast({
           title: 'Error',
           description: 'Failed to load settings. Please try again.',
@@ -94,7 +102,8 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
       // Refresh settings (using the effect's fetch function)
       // No need to call fetchSettings as it's no longer accessible here
-    } catch (_error) {
+    } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: 'Error',
         description: 'Failed to save settings. Please try again.',

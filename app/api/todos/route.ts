@@ -70,6 +70,15 @@ async function findOrCreatePersonalWorkspace(userId: string) {
   return workspaceId;
 }
 
+/**
+ * Retrieves the authenticated user's todos, optionally filtered by workspace, including nested comments and comment author info.
+ *
+ * Returns a JSON array of todos, each with associated comments and user details. If a `workspaceId` query parameter is provided, only todos from that workspace are returned.
+ *
+ * @returns A JSON response containing an array of todos with nested comments and comment user information.
+ *
+ * @remark Returns 401 if the user is not authenticated, 400 if the workspace ID is invalid, and 500 on server errors.
+ */
 export async function GET(req: Request) {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
@@ -86,7 +95,7 @@ export async function GET(req: Request) {
     if (workspaceIdParam) {
       try {
         workspaceId = uuidSchema.parse(workspaceIdParam);
-      } catch (_error) {
+      } catch (_) {
         return NextResponse.json({ error: 'Invalid workspace ID format' }, { status: 400 });
       }
     }
@@ -196,8 +205,8 @@ export async function GET(req: Request) {
     }, []);
 
     return NextResponse.json(groupedTodos);
-  } catch (_error) {
-    console.error('Error fetching todos:');
+  } catch (error) {
+    console.error('Error fetching todos:', error);
     return NextResponse.json({ error: 'Failed to fetch todos' }, { status: 500 });
   }
 }

@@ -27,10 +27,16 @@ import GoogleSignInButton from './GoogleSignInButton';
 import GithubSignInButton from './GithubSignInButton';
 import TwitterSignInButton from './TwitterSignInButton';
 
+/**
+ * Renders a user authentication button that displays either a user menu with account options or a sign-in dialog, depending on session state.
+ *
+ * When a user is signed in, shows an avatar button that opens a dropdown menu with options for reminders, settings, and signing out (which also clears relevant local storage). When no user is signed in, displays a dialog with social sign-in options.
+ */
 export default function LoginButton() {
   const { data: session } = useSession();
   const [showSettings, setShowSettings] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
+  const _debugAuth = false;
 
   if (session?.user) {
     const initials = session.user.name
