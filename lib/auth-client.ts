@@ -16,33 +16,29 @@ export let tauriReady: Promise<void>;
 if (typeof window !== 'undefined') {
   // Use dynamic imports to load Tauri API
   const loadTauriApis = async () => {
+    // Skip entirely if not in Tauri environment
+    if (typeof window === 'undefined' || !window.__TAURI_IPC__) {
+      console.log('Not in Tauri environment, skipping API imports');
+      return;
+    }
+
     try {
-      // Check if Tauri is available in the window object
-      if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
-        // Import from specific modules to avoid undefined functions
-        const tauriCore = await import('@tauri-apps/api/tauri');
-        const tauriEvent = await import('@tauri-apps/api/event');
+      // Only attempt to import Tauri API in Tauri environment
+      const tauriCore = await import('@tauri-apps/api/tauri');
+      const tauriEvent = await import('@tauri-apps/api/event');
 
-        // Get invoke from the tauri module
-        invoke = tauriCore.invoke;
+      // Get invoke from the tauri module
+      invoke = tauriCore.invoke;
 
-        // Get listen from the event module
-        listen = tauriEvent.listen;
+      // Get listen from the event module
+      listen = tauriEvent.listen;
 
-        if (!invoke || !listen) {
-          throw new Error('Tauri API functions not found');
-        }
-      } else {
-        // Provide fallback mock implementations if not in Tauri environment
-        console.warn('Not in Tauri environment, using mock implementations');
-        invoke = async () => null;
-        listen = async () => () => {}; // Mock unlisten function
+      if (!invoke || !listen) {
+        throw new Error('Tauri API functions not found');
       }
     } catch (e) {
-      console.warn('Tauri API import failed:', e);
-      // Provide fallback implementations instead of propagating the error
-      invoke = async () => null;
-      listen = async () => () => {}; // Mock unlisten function
+      console.error('Tauri API import failed:', e);
+      // Don't provide fallback in production
     }
   };
 
@@ -97,9 +93,6 @@ async function handleTauriOAuth(
   authUrl: string,
   provider: string
 ): Promise<{ accessToken: string }> {
-  // Ensure Tauri APIs are loaded before proceeding
-  await tauriReady;
-
   // If not in a Tauri environment, redirect to the authUrl directly in a new window
   if (typeof window !== 'undefined' && !window.__TAURI_IPC__) {
     console.log('Not in Tauri environment, opening OAuth URL in a new window');
@@ -109,72 +102,84 @@ async function handleTauriOAuth(
     const top = window.screenY + (window.outerHeight - height) / 2.5;
     const features = `width=${width},height=${height},left=${left},top=${top}`;
 
-    // Open a popup and wait for redirect with token
+    // Open a popup for OAuth flow
     window.open(authUrl, `auth-${provider}`, features);
 
-    // Return a mock token since we can't capture the redirect in web mode
-    // This will be handled by the main OAuth flow in better-auth
+    // Return an empty token - better-auth will handle the redirect
     return Promise.resolve({ accessToken: '' });
   }
 
-  return new Promise((resolve, reject) => {
-    // Track unlisten function to clean up event listener
-    let unlistenFn: () => void;
+  // Run Tauri-specific OAuth flow if we're in Tauri
+  try {
+    // Ensure Tauri APIs are loaded before proceeding
+    await tauriReady;
 
-    // Listen for auth callback from Tauri
-    listen<{ url: string }>('auth-callback', async (event) => {
-      try {
-        // Parse the URL to extract tokens
-        const url = event.payload.url;
+    if (!invoke || !listen) {
+      throw new Error('Tauri APIs not available');
+    }
 
-        // For fragments like #access_token=xyz&refresh_token=abc
-        if (url.includes('#access_token=')) {
-          const fragmentPart = url.split('#')[1];
-          const params = new URLSearchParams(fragmentPart);
+    return new Promise((resolve, reject) => {
+      // Track unlisten function to clean up event listener
+      let unlistenFn: () => void;
 
-          const accessToken = params.get('access_token');
-          if (accessToken) {
+      // Listen for auth callback from Tauri
+      listen<{ url: string }>('auth-callback', async (event) => {
+        try {
+          // Parse the URL to extract tokens
+          const url = event.payload.url;
+
+          // For fragments like #access_token=xyz&refresh_token=abc
+          if (url.includes('#access_token=')) {
+            const fragmentPart = url.split('#')[1];
+            const params = new URLSearchParams(fragmentPart);
+
+            const accessToken = params.get('access_token');
+            if (accessToken) {
+              // Clean up listener before resolving
+              if (unlistenFn) unlistenFn();
+              resolve({ accessToken });
+            }
+          }
+
+          // For query params like ?code=xyz&state=abc
+          else if (url.includes('?code=') || url.includes('&state=')) {
+            // This requires a server exchange, which better-auth should handle
+            // We're just passing the entire URL back to better-auth
+
             // Clean up listener before resolving
             if (unlistenFn) unlistenFn();
-            resolve({ accessToken });
+            // Return the URL for better-auth to complete the flow
+            resolve({ accessToken: url });
+          } else {
+            // Clean up listener before rejecting
+            if (unlistenFn) unlistenFn();
+            reject(new Error('Invalid auth response'));
           }
-        }
-
-        // For query params like ?code=xyz&state=abc
-        else if (url.includes('?code=') || url.includes('&state=')) {
-          // This requires a server exchange, which better-auth should handle
-          // We're just passing the entire URL back to better-auth
-
-          // Clean up listener before resolving
-          if (unlistenFn) unlistenFn();
-          // Return the URL for better-auth to complete the flow
-          resolve({ accessToken: url });
-        } else {
+        } catch (error) {
           // Clean up listener before rejecting
           if (unlistenFn) unlistenFn();
-          reject(new Error('Invalid auth response'));
+          reject(error);
         }
-      } catch (error) {
-        // Clean up listener before rejecting
+      })
+        .then((unlisten) => {
+          // Store the unlisten function for cleanup
+          unlistenFn = unlisten;
+        })
+        .catch((error) => {
+          reject(error);
+        });
+
+      // Open the OAuth window in Tauri
+      invoke('open_oauth_window', { authUrl }).catch((error) => {
+        // Clean up listener if window opening fails
         if (unlistenFn) unlistenFn();
         reject(error);
-      }
-    })
-      .then((unlisten) => {
-        // Store the unlisten function for cleanup
-        unlistenFn = unlisten;
-      })
-      .catch((error) => {
-        reject(error);
       });
-
-    // Open the OAuth window in Tauri
-    invoke('open_oauth_window', { authUrl }).catch((error) => {
-      // Clean up listener if window opening fails
-      if (unlistenFn) unlistenFn();
-      reject(error);
     });
-  });
+  } catch (error) {
+    console.error('Error in Tauri OAuth flow:', error);
+    return Promise.resolve({ accessToken: '' });
+  }
 }
 
 // Utility function to check if passkeys are supported
