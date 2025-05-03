@@ -34,7 +34,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.agenda.dev https://*.vercel-insights.com https://*.vercel.app https://github.com https://*.github.com https://accounts.google.com https://*.google.com https://api.twitter.com https://*.twitter.com; form-action 'self' https://github.com https://accounts.google.com https://api.twitter.com"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.agenda.dev https://*.vercel-insights.com https://*.vercel.app https://github.com https://*.github.com https://accounts.google.com https://*.google.com https://api.twitter.com https://*.twitter.com https://www.gstatic.com; form-action 'self' https://github.com https://accounts.google.com https://api.twitter.com; object-src 'self'; media-src 'self'; frame-src 'self' https://accounts.google.com https://*.google.com"
     },
     "withGlobalTauri": true
   },

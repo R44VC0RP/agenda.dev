@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/react';
+import { passkeyClient } from 'better-auth/client/plugins';
 
 // Dynamic imports for Tauri API to avoid errors during SSR
 let invoke: any;
@@ -72,6 +73,12 @@ export const authClient = createAuthClient({
     // Default behavior for web
     return null;
   },
+  plugins: [
+    passkeyClient({
+      // Client-side passkey configuration
+      conditional: false, // Disable conditional UI to avoid auto-prompting issues
+    }),
+  ],
 });
 
 // Handle OAuth flow in Tauri
