@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 import { auth } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
