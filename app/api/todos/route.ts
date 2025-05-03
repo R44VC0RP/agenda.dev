@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { todos, comments, users, workspaces, workspaceMembers } from '@/lib/db/schema';
@@ -82,7 +86,7 @@ export async function GET(req: Request) {
     if (workspaceIdParam) {
       try {
         workspaceId = uuidSchema.parse(workspaceIdParam);
-      } catch (_error) {
+      } catch (_) {
         return NextResponse.json({ error: 'Invalid workspace ID format' }, { status: 400 });
       }
     }
@@ -192,8 +196,8 @@ export async function GET(req: Request) {
     }, []);
 
     return NextResponse.json(groupedTodos);
-  } catch (_error) {
-    console.error('Error fetching todos:');
+  } catch (error) {
+    console.error('Error fetching todos:', error);
     return NextResponse.json({ error: 'Failed to fetch todos' }, { status: 500 });
   }
 }

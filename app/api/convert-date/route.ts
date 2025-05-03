@@ -1,4 +1,8 @@
 import { openai } from '@ai-sdk/openai';
+
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';

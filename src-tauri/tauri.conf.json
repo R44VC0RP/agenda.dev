@@ -1,0 +1,60 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Agenda",
+  "version": "0.1.0",
+  "identifier": "dev.agenda.app",
+  "build": {
+    "frontendDist": "../out",
+    "devUrl": "http://localhost:3000/desktop",
+    "beforeDevCommand": "bun dev",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Agenda",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      },
+      {
+        "width": 800,
+        "height": 600,
+        "decorations": true,
+        "url": "about:blank",
+        "title": "OAuth Login",
+        "visible": false,
+        "label": "oauth"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.agenda.dev https://*.vercel-insights.com https://*.vercel.app https://github.com https://*.github.com https://accounts.google.com https://*.google.com https://api.twitter.com https://*.twitter.com https://www.gstatic.com; form-action 'self' https://github.com https://accounts.google.com https://api.twitter.com; object-src 'self'; media-src 'self'; frame-src 'self' https://accounts.google.com https://*.google.com"
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "agenda.dev",
+      "providerShortName": null,
+      "signingIdentity": null,
+      "entitlements": null
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

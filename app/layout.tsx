@@ -7,6 +7,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { PostHogProvider } from '@/components/PostHogProvider';
 import ToastProvider from '@/components/toast-provider';
 import PWAWrapper from '@/components/PWAWrapper';
+import { TauriProvider } from '@/components/ui/tauri-provider';
+
 
 export const metadata: Metadata = {
   title: 'agenda.dev',
@@ -34,10 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning>
         <PostHogProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            {children}
-            <ToastProvider />
-          </ThemeProvider>
+          <TauriProvider>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+              {children}
+              <ToastProvider />
+            </ThemeProvider>
+          </TauriProvider>
           <Analytics />
         </PostHogProvider>
         {/* PWA Support */}
