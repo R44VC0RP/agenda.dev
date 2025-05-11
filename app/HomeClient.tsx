@@ -826,6 +826,16 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
         <h1 className="text-xl hidden md:block">agenda.dev</h1>
       </div>
       <div className="absolute top-4 right-4 flex items-center space-x-2 justify-center md:mb-0 md:mx-0 md:justify-start z-20">
+        {session?.user && (
+          <a
+            href="/new"
+            className="h-8 px-3 rounded-full bg-white dark:bg-[#131316] flex items-center gap-2 shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24),0px_0px_0px_1px_rgba(0,0,0,1.00),inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] transition-colors duration-200"
+          >
+            <span className="text-sm text-gray-900 dark:text-white flex items-center">
+              New Tab
+            </span>
+          </a>
+        )}
         {session?.user && activePlan !== "pro" && !isMobile && (
           <button
             onClick={() => setShowSettings(true)}
