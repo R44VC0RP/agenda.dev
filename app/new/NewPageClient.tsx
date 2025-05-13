@@ -14,6 +14,9 @@ import GithubIssueCard from "@/components/new/GithubIssueCard"
 import GithubPRCard from "@/components/new/GithubPRCard"
 import GoogleCalendarCard from "@/components/new/GoogleCalendarCard"
 import TwitterDMCard from "@/components/new/TwitterDMCard"
+import VercelBuildCard from "@/components/new/VercelBuildCard"
+import PostHogCard from "@/components/new/PostHogCard"
+import SlackMessageCard from "@/components/new/SlackMessageCard"
 
 type ViewOption = "all" | "today" | "week" | "month"
 
@@ -367,6 +370,65 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
         comments: 3
       }} 
     />,
+    <VercelBuildCard
+      key="vercel-build-1"
+      build={{
+        id: 'build-1',
+        projectName: 'agenda.dev',
+        branch: 'main',
+        commitMessage: 'Add dark mode support and fix mobile responsiveness',
+        status: 'building',
+        startTime: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+        url: 'https://vercel.com',
+        deploymentUrl: 'https://agenda-git-main.vercel.app',
+        creator: {
+          name: 'Sarah Dev',
+          avatar: 'https://github.com/github.png'
+        }
+      }}
+    />,
+    <PostHogCard
+      key="posthog-stats-1"
+      stats={{
+        id: 'stats-1',
+        projectName: 'Agenda Analytics',
+        url: 'https://app.posthog.com',
+        metrics: {
+          activeUsers: 12500,
+          activeUsersChange: 15,
+          events: 250000,
+          eventsChange: 8,
+          conversions: 1250,
+          conversionsChange: 12,
+          timeframe: '24h'
+        }
+      }}
+    />,
+    <SlackMessageCard
+      key="slack-message-1"
+      message={{
+        id: 'msg-1',
+        content: 'Hey team! Just deployed the new analytics dashboard. Check it out and let me know what you think! 📊',
+        sender: {
+          name: 'Alex Chen',
+          avatar: 'https://github.com/github.png'
+        },
+        channel: {
+          name: 'product-updates',
+          isPrivate: false
+        },
+        timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+        url: 'https://slack.com',
+        threadCount: 5,
+        reactions: [
+          { emoji: '👍', count: 3 },
+          { emoji: '🚀', count: 2 }
+        ],
+        attachments: [
+          { type: 'image', name: 'dashboard-preview.png', url: 'https://example.com/image' }
+        ]
+      }}
+    />,
     <GithubPRCard 
       key="github-pr-1"
       pr={{
@@ -432,27 +494,44 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
     />
   ];
 
-  // Combine todos and integration cards into columns
-  // We'll put all content items in a single array and then distribute them
-  const contentItems = [
-    ...filteredTodos.map(todo => (
-      <TodoItem
-        key={`todo-${todo.id}`}
-        todo={todo}
-        onToggle={handleToggleTodo}
-        onDelete={handleDeleteTodo}
-        onAddComment={handleAddComment}
-        onDeleteComment={handleDeleteComment}
-        onReschedule={handleRescheduleTodo}
-      />
-    )),
-    ...integrationCards
+  // Stable hash function to assign items to columns consistently
+  const getHash = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  };
+
+  // Combine todos and integration cards into a list with IDs for stable column assignment
+  const itemsWithIds: { id: string; node: React.ReactNode }[] = [
+    ...filteredTodos.map(todo => ({
+      id: todo.id,
+      node: (
+        <TodoItem
+          key={`todo-${todo.id}`}
+          todo={todo}
+          onToggle={handleToggleTodo}
+          onDelete={handleDeleteTodo}
+          onAddComment={handleAddComment}
+          onDeleteComment={handleDeleteComment}
+          onReschedule={handleRescheduleTodo}
+        />
+      )
+    })),
+    ...integrationCards.map(card => {
+      const element = card as React.ReactElement;
+      return { id: String(element.key), node: element };
+    })
   ];
-  
-  // Distribute content across columns
-  const columns = Array.from({ length: columnCount }, (_, i) => 
-    contentItems.filter((_, index) => index % columnCount === i)
-  );
+
+  // Create columns and assign items based on stable hash
+  const columns: React.ReactNode[][] = Array.from({ length: columnCount }, () => []);
+  itemsWithIds.forEach(({ id, node }) => {
+    const colIndex = getHash(id) % columnCount;
+    columns[colIndex].push(node);
+  });
   
   if (isLoading) {
     return (

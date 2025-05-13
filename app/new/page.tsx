@@ -4,14 +4,16 @@ import type { Todo } from "@/lib/types"
 import { db } from "@/lib/db"
 import { todos, comments, users } from "@/lib/db/schema"
 import { eq, and, lte, gte, sql } from "drizzle-orm"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-export default async function NewPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
+export default async function NewPage() {
+  // Get the current URL from headers and parse search params
+  const headersList = await headers();
+  const fullUrl = headersList.get("x-url") || "";
+  const url = fullUrl ? new URL(fullUrl, process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000") : null;
+  const searchParams = url ? url.searchParams : new URLSearchParams();
+
   const cookieStore = await cookies()
   const session = await auth.api.getSession({
     headers: new Headers({
@@ -25,9 +27,10 @@ export default async function NewPage({
   }
   
   // Get view option from query params or default to 'all'
-  const viewOption = Array.isArray(searchParams.view) 
-    ? searchParams.view[0] 
-    : (searchParams.view ?? 'all')
+  const viewRaw = searchParams.getAll ? searchParams.getAll("view") : [searchParams.get("view")]
+  const viewOption = Array.isArray(viewRaw) && viewRaw.length > 0
+    ? viewRaw[0] ?? 'all'
+    : (searchParams.get("view") ?? 'all')
   
   let filteredTodos: Todo[] = []
   
