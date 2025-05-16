@@ -11,6 +11,7 @@ import ViewToggle from "@/components/view-toggle"
 import LoginButton from "@/components/LoginButton"
 import FeedbackWidget from "@/components/feedback-widget"
 import AgendaIcon from "@/components/AgendaIcon"
+import DevModal from "@/components/development/DevModal"
 import type { Todo, Comment, Workspace } from "@/lib/types"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSession, subscription } from "@/lib/auth-client"
@@ -836,6 +837,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
             </span>
           </a>
         )}
+        {session?.user && <DevModal />}
         {session?.user && activePlan !== "pro" && !isMobile && (
           <button
             onClick={() => setShowSettings(true)}

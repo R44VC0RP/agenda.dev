@@ -20,6 +20,11 @@ import SlackMessageCard from "@/components/new/SlackMessageCard"
 
 type ViewOption = "all" | "today" | "week" | "month"
 
+// Type guard function to validate ViewOption
+const isValidViewOption = (value: string): value is ViewOption => {
+  return ["all", "today", "week", "month"].includes(value)
+}
+
 interface NewPageClientProps {
   initialTodos: Todo[]
   initialViewOption: string
@@ -56,7 +61,9 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
   const { data: session } = useSession()
   const { resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewOption, setViewOption] = useState<ViewOption>(initialViewOption as ViewOption || "all")
+  const [viewOption, setViewOption] = useState<ViewOption>(
+    isValidViewOption(initialViewOption) ? initialViewOption : "all"
+  )
   const [todos, setTodos] = usePersistentState<Todo[]>('new_todos', initialTodos)
   const [columnCount, setColumnCount] = useState(4)
   const searchInputRef = useRef<HTMLInputElement>(null)

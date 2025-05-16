@@ -46,9 +46,17 @@ export default function LoginButton() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex items-center gap-2 truncate">
-              <span className="font-normal text-muted-foreground">Signed in as</span>
-              <span className="truncate">{session.user.name}</span>
+            <DropdownMenuLabel className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-normal text-muted-foreground">Signed in as</span>
+                <span className="truncate">{session.user.name}</span>
+              </div>
+              {process.env.NODE_ENV === 'development' && (
+                <div className="flex items-center gap-2">
+                  <span className="font-normal text-muted-foreground">ID</span>
+                  <span className="truncate cursor-pointer" onClick={() => navigator.clipboard.writeText(session.user.id)}>{session.user.id}</span>
+                </div>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem 

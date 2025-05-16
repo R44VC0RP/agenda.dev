@@ -5,6 +5,13 @@ import * as schema from "./db/schema";
 import Stripe from "stripe";
 import { stripe } from "@better-auth/stripe";
 
+// Calendar-specific scopes needed for testing
+const CALENDAR_SCOPES = [
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/calendar.settings.readonly'
+];
+
 // If you are working on local development, comment out any of the auth methods that are not needed for local development.
 
 // These checks are only for production environments.
@@ -58,6 +65,7 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      scopes: CALENDAR_SCOPES // Pass array directly
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID,
