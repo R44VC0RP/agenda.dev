@@ -1,216 +1,175 @@
+// app/api/[transport]/route.ts
+import { auth } from '@/lib/auth';
 import { createMcpHandler } from '@vercel/mcp-adapter';
+import { withMcpAuth } from 'better-auth/plugins';
 import { z } from 'zod';
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { todos, comments, workspaces, workspaceMembers } from "@/lib/db/schema";
-import { v4 as uuidv4 } from "uuid";
-import { eq, and } from "drizzle-orm";
+import { db } from '@/lib/db';
+import { todos, workspaces, workspaceMembers } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
 
-// Validation schemas
-const todoCreateSchema = z.object({
-  title: z.string().min(1).max(500).trim(),
-  dueDate: z.string().nullable().optional(),
-  urgency: z.number().int().min(1).max(5).default(1),
-  workspaceId: z.string().uuid().nullable().optional(),
-});
-
-const todoUpdateSchema = z.object({
-  id: z.string().uuid(),
-  completed: z.boolean(),
-});
-
-const commentCreateSchema = z.object({
-  todoId: z.string().uuid(),
-  text: z.string().min(1).max(1000).trim(),
-});
-
-// Helper function to find personal workspace
-async function findOrCreatePersonalWorkspace(userId: string) {
-  // Find personal workspace
-  const personalWorkspace = await db
-    .select({ id: workspaces.id })
-    .from(workspaces)
-    .innerJoin(
-      workspaceMembers,
-      eq(workspaces.id, workspaceMembers.workspaceId)
-    )
-    .where(
-      and(
-        eq(workspaceMembers.userId, userId),
-        eq(workspaces.name, 'Personal')
-      )
-    )
-    .limit(1);
-    
-  // If personal workspace exists, return it
-  if (personalWorkspace.length > 0) {
-    return personalWorkspace[0].id;
-  }
-  
-  // Create a new personal workspace
-  const workspaceId = uuidv4();
-  const now = new Date();
-  
-  await db.transaction(async (tx) => {
-    // Create the workspace
-    await tx.insert(workspaces).values({
-      id: workspaceId,
-      name: 'Personal',
-      ownerId: userId,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    // Add owner as member
-    await tx.insert(workspaceMembers).values({
-      workspaceId,
-      userId,
-      role: 'owner',
-    });
+const handler = async (request: Request) => {
+  const session = await auth.api.getMcpSession({
+    headers: request.headers,
   });
-  
-  return workspaceId;
-}
 
-const handlerWithAuth = async (request: Request) => {
-  // Get session and validate auth
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  if (!session) {
+    console.log('No session found');
+    return new Response(null, {
+      status: 401,
+    });
   }
 
-  return createMcpHandler(async (server) => {
-    // Add todo tool
-    server.tool(
-      "add_todo",
-      "Add a new todo with name, date, time, and urgency",
-      {
-        name: z.string().min(1).max(500),
-        date: z.string(),
-        time: z.string(),
-        urgency: z.number().int().min(1).max(5),
-      },
-      async ({ name, date, time, urgency }) => {
-        try {
-          // Combine date and time
-          const dueDate = new Date(`${date}T${time}`);
-          
-          // Get or create personal workspace
-          const workspaceId = await findOrCreatePersonalWorkspace(session.user.id);
-          
+  return createMcpHandler(
+    server => {
+      // List workspaces tool
+      server.tool(
+        'list_workspaces',
+        'List all workspaces you have access to',
+        { },
+        async () => {
+          const userWorkspaces = await db
+            .select({
+              id: workspaces.id,
+              name: workspaces.name,
+              role: workspaceMembers.role,
+            })
+            .from(workspaces)
+            .innerJoin(
+              workspaceMembers,
+              eq(workspaces.id, workspaceMembers.workspaceId)
+            )
+            .where(eq(workspaceMembers.userId, session.userId));
+
+          return {
+            content: [{ 
+              type: 'text', 
+              text: `Your workspaces: ${JSON.stringify(userWorkspaces, null, 2)}` 
+            }],
+          };
+        }
+      );
+
+      // List todos tool
+      server.tool(
+        'list_todos',
+        'List your todos, optionally filtered by workspace',
+        {
+          workspaceId: z.string().optional(),
+        },
+        async ({ workspaceId }) => {
+          const whereConditions = workspaceId 
+            ? and(eq(todos.userId, session.userId), eq(todos.workspaceId, workspaceId))
+            : eq(todos.userId, session.userId);
+
+          const userTodos = await db.select()
+            .from(todos)
+            .where(whereConditions);
+
+          return {
+            content: [{ 
+              type: 'text', 
+              text: `Your todos: ${JSON.stringify(userTodos, null, 2)}` 
+            }],
+          };
+        }
+      );
+
+      // Add todo tool
+      server.tool(
+        'add_todo',
+        'Add a new todo item',
+        {
+          title: z.string(),
+          workspaceId: z.string(),
+          dueDate: z.string(),
+          urgency: z.number(),
+        },
+        async ({ title, workspaceId, dueDate, urgency }) => {
+          console.log('Adding todo', title, workspaceId, dueDate, urgency);
           const todo = await db.insert(todos).values({
             id: uuidv4(),
-            title: name,
-            userId: session.user.id,
-            workspaceId,
+            title,
+            userId: session.userId,
+            workspaceId: workspaceId,
             completed: false,
-            dueDate: dueDate.toISOString(),
-            urgency,
+            dueDate: dueDate || null,
+            urgency: urgency || 1,
             createdAt: new Date(),
             updatedAt: new Date(),
           }).returning();
 
           return {
-            content: [
-              {
-                type: "text",
-                text: `✅ Todo "${name}" added successfully with due date ${dueDate.toLocaleString()} and urgency ${urgency}`,
-              },
-            ],
+            content: [{ 
+              type: 'text', 
+              text: `Added new todo: ${JSON.stringify(todo[0])}` 
+            }],
           };
-        } catch (error) {
-          console.error("Error adding todo:", error);
-          throw new Error("Failed to add todo");
         }
-      }
-    );
+      );
 
-    // Complete todo tool
-    server.tool(
-      "complete_todo",
-      "Mark a todo as complete",
-      {
-        todoId: z.string().uuid(),
-      },
-      async ({ todoId }) => {
-        try {
-          const todo = await db.update(todos)
+      // Mark todo completed tool
+      server.tool(
+        'complete_todo',
+        'Mark a todo as completed, you can pass in a todo id as an argument with the id property',
+        {
+          id: z.string(),
+        },
+        async ({ id }) => {
+          console.log('Completing todo', id);
+          const updatedTodo = await db.update(todos)
             .set({ 
               completed: true,
               updatedAt: new Date()
             })
-            .where(
-              and(
-                eq(todos.id, todoId),
-                eq(todos.userId, session.user.id)
-              )
-            )
+            .where(and(
+              eq(todos.id, id),
+              eq(todos.userId, session.userId)
+            ))
             .returning();
 
-          if (!todo.length) {
-            throw new Error("Todo not found or unauthorized");
+          if (!updatedTodo.length) {
+            return {
+              content: [{ type: 'text', text: 'Todo not found or you do not have permission to update it.' }],
+            };
           }
 
           return {
-            content: [
-              {
-                type: "text",
-                text: `✅ Todo marked as complete`,
-              },
-            ],
+            content: [{ 
+              type: 'text', 
+              text: `Todo marked as completed: ${JSON.stringify(updatedTodo[0])}` 
+            }],
           };
-        } catch (error) {
-          console.error("Error completing todo:", error);
-          throw new Error("Failed to complete todo");
         }
-      }
-    );
-
-    // Add comment tool
-    server.tool(
-      "add_comment",
-      "Add a comment to a todo",
-      {
-        todoId: z.string().uuid(),
-        text: z.string().min(1).max(1000),
+      );
+    },
+    {
+      capabilities: {
+        tools: {
+          list_workspaces: {
+            description: 'List all workspaces you have access to',
+          },
+          list_todos: {
+            description: 'List your todos, optionally filtered by workspace',
+          },
+          add_todo: {
+            description: 'Add a new todo item',
+          },
+          complete_todo: {
+            description: 'Mark a todo as completed, you can pass in a todo id',
+          },
+        },
       },
-      async ({ todoId, text }) => {
-        try {
-          // First verify the todo exists and belongs to the user
-          const todoExists = await db.query.todos.findFirst({
-            where: and(
-              eq(todos.id, todoId),
-              eq(todos.userId, session.user.id)
-            ),
-          });
-
-          if (!todoExists) {
-            throw new Error("Todo not found or unauthorized");
-          }
-
-          const comment = await db.insert(comments).values({
-            id: uuidv4(),
-            text,
-            todoId,
-            userId: session.user.id,
-            createdAt: new Date(),
-          }).returning();
-
-          return {
-            content: [
-              {
-                type: "text",
-                text: `💬 Comment added successfully`,
-              },
-            ],
-          };
-        } catch (error) {
-          console.error("Error adding comment:", error);
-          throw new Error("Failed to add comment");
-        }
-      }
-    );
-  })(request);
+    },
+    {
+      redisUrl: process.env.REDIS_URL,
+      streamableHttpEndpoint: '/api/mcp',
+      sseEndpoint: '/api/sse',
+      sseMessageEndpoint: '/api/message',
+      maxDuration: 60,
+      verboseLogs: true,
+    }
+  )(request);
 };
 
-export { handlerWithAuth as GET, handlerWithAuth as POST, handlerWithAuth as DELETE };
+export { handler as GET, handler as POST, handler as DELETE };

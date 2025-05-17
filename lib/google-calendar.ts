@@ -1,8 +1,6 @@
 import { calendar_v3, calendar } from '@googleapis/calendar';
 import { OAuth2Client } from 'google-auth-library';
-import { accounts } from './db/schema';
-import { eq, and } from 'drizzle-orm';
-import { db } from './db';
+import { auth } from './auth';
 
 // Types for calendar events
 export interface CalendarEvent {
@@ -21,34 +19,24 @@ export interface CalendarEvent {
 }
 
 // Function to check if a user has Google Calendar connected
-export async function hasGoogleCalendarAccess(userId: string): Promise<{ success: boolean; hasAccess: boolean; details: { hasAccount: boolean; hasAccessToken: boolean; hasRefreshToken: boolean }; error?: string }> {
+export async function hasGoogleCalendarAccess(userId: string): Promise<{ success: boolean; hasAccess: boolean; error?: string }> {
   try {
-    const account = await db.query.accounts.findFirst({
-      where: and(
-        eq(accounts.userId, userId),
-        eq(accounts.providerId, 'google')
-      )
+    const token = await auth.api.getAccessToken({
+      body: {
+        providerId: 'google',
+        userId
+      }
     });
 
     return {
       success: true,
-      hasAccess: !!account && !!account.accessToken && !!account.refreshToken,
-      details: {
-        hasAccount: !!account,
-        hasAccessToken: !!account?.accessToken,
-        hasRefreshToken: !!account?.refreshToken
-      }
+      hasAccess: !!token.accessToken
     };
   } catch (error) {
     console.error('Error checking Google Calendar access:', error);
     return {
       success: false,
       hasAccess: false,
-      details: {
-        hasAccount: false,
-        hasAccessToken: false,
-        hasRefreshToken: false
-      },
       error: error instanceof Error ? error.message : 'An unknown error occurred'
     };
   }
@@ -56,35 +44,33 @@ export async function hasGoogleCalendarAccess(userId: string): Promise<{ success
 
 // Function to get Google Calendar client
 async function getGoogleCalendarClient(userId: string): Promise<calendar_v3.Calendar | null> {
-  const account = await db.query.accounts.findFirst({
-    where: and(
-      eq(accounts.userId, userId),
-      eq(accounts.providerId, 'google')
-    )
-  });
+  try {
+    const token = await auth.api.getAccessToken({
+      body: {
+        providerId: 'google',
+        userId
+      }
+    });
 
-  if (!account?.accessToken) {
-    console.log('No access token found for user:', userId);
+    if (!token.accessToken) {
+      console.log('No access token found for user:', userId);
+      return null;
+    }
+
+    const oauth2Client = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+
+    oauth2Client.setCredentials({
+      access_token: token.accessToken
+    });
+
+    return calendar({ version: 'v3', auth: oauth2Client });
+  } catch (error) {
+    console.error('Error getting Google Calendar client:', error);
     return null;
   }
-
-  if (!account?.refreshToken) {
-    console.log('No refresh token found for user:', userId);
-    return null;
-  }
-
-  const auth = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET
-  );
-
-  auth.setCredentials({
-    access_token: account.accessToken,
-    refresh_token: account.refreshToken,
-    expiry_date: account.accessTokenExpiresAt?.getTime() || undefined
-  });
-
-  return calendar({ version: 'v3', auth });
 }
 
 // Function to get calendar events for a specific time range
@@ -98,7 +84,7 @@ export async function getCalendarEvents(
   
   if (!calendar) {
     const access = await hasGoogleCalendarAccess(userId);
-    throw new Error(`Google Calendar not connected. Details: ${JSON.stringify(access.details)}`);
+    throw new Error(`Google Calendar not connected. Access status: ${access.hasAccess}`);
   }
 
   try {

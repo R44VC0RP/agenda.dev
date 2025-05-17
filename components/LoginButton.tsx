@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useSession, authClient } from "@/lib/auth-client"
 import { User, Settings, LogOut, Bell } from "lucide-react"
 import { FaUser } from "react-icons/fa"
+import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ export default function LoginButton() {
   const { data: session } = useSession()
   const [showSettings, setShowSettings] = useState(false)
   const [showReminders, setShowReminders] = useState(false)
+  const router = useRouter()
 
   if (session?.user) {
     const initials = session.user.name
@@ -76,15 +78,15 @@ export default function LoginButton() {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="gap-2 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-              onClick={() => {
+              onClick={async () => {
                 // Clear local storage before signing out
                 localStorage.removeItem('todos')
                 localStorage.removeItem('showCompleted')
                 localStorage.removeItem('isTableView')
                 localStorage.removeItem('currentWorkspace')
-                // Sign out and reload to show landing page
-                authClient.signOut()
-                window.location.reload()
+                // Sign out and navigate to home page
+                await authClient.signOut()
+                router.refresh()
               }}
             >
               <LogOut className="h-4 w-4" />

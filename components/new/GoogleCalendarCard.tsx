@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { Calendar, Clock, MapPin, User, Users, ExternalLink, CheckCircle, HelpCircle, XCircle, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface GoogleCalendarCardProps {
   event: {
@@ -18,6 +20,7 @@ interface GoogleCalendarCardProps {
       responseStatus?: 'accepted' | 'tentative' | 'declined' | 'needsAction'
     }>
     url: string
+    hangoutLink?: string
     isRecurring?: boolean
   }
 }
@@ -25,6 +28,9 @@ interface GoogleCalendarCardProps {
 const GoogleCalendarCard = ({ event }: GoogleCalendarCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+
+  // Determine join link (prefer hangoutLink)
+  const joinUrl = event.hangoutLink ?? event.url
 
   // Format time (e.g. "10:00 AM - 11:00 AM")
   const formatTimeRange = (start: string, end: string) => {
@@ -112,100 +118,113 @@ const GoogleCalendarCard = ({ event }: GoogleCalendarCardProps) => {
 
   return (
     <div
-      className="backdrop-blur-sm bg-gradient-to-br from-blue-50/95 to-white/90 dark:from-blue-950/90 dark:to-[#131316]/95 rounded-[14px] shadow-[0px_4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_40px_rgba(0,0,0,0.35)] border border-black/[0.04] dark:border-white/[0.06] backdrop-filter overflow-hidden transition-colors duration-200 relative
-      before:absolute before:inset-0 before:rounded-[14px] before:border before:border-white/[0.12] dark:before:border-white/[0.04] before:z-[-1]
-      after:absolute after:inset-0 after:rounded-[14px] after:bg-[url('/noise-light.png')] after:opacity-[0.03] after:z-[-1] dark:after:opacity-[0.07]"
+      className="group relative w-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex flex-col relative">
-        <div className="border-l-2 border-blue-500 dark:border-blue-400">
-          <div className="p-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/40 rounded-full p-1.5">
-                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                    Google Calendar
-                  </span>
-                </div>
-                
-                {isHovered && (
-                  <a 
-                    href={event.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-gray-600 dark:text-white/50 dark:hover:text-white/80 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-
-              <div className="mt-1">
-                <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">
+      <div
+        className={cn(
+          "relative w-full rounded-lg overflow-hidden transition-all duration-200",
+          "bg-white dark:bg-gray-900 shadow-sm",
+          "hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-black/20",
+          "border border-gray-200/80 dark:border-white/[0.05]",
+          isHovered && "ring-1 ring-black/5 dark:ring-white/10"
+        )}
+      >
+        <div className="p-4">
+          <div className="flex flex-col gap-1">
+            {/* Event title */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[15px] font-medium text-gray-900 dark:text-white truncate">
                   {event.title}
                 </h3>
-                
-                <div className="flex items-center mt-2 text-[13px] text-gray-700 dark:text-gray-300">
-                  <Clock className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
-                  <span>{formatTimeRange(event.startTime, event.endTime)}</span>
-                  <span className="mx-1.5 text-gray-400 dark:text-gray-500">•</span>
-                  <span className="text-gray-500 dark:text-gray-400">{formatDuration()}</span>
-                  {event.isRecurring && (
-                    <span className="ml-1 text-blue-500 dark:text-blue-400 font-medium">↻</span>
-                  )}
-                </div>
-
-                {event.location && (
-                  <div className="flex items-center mt-1.5 text-[13px] text-gray-700 dark:text-gray-300">
-                    <MapPin className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                )}
               </div>
+            </div>
 
+            {/* Time and duration */}
+            <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
+              <Clock className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
+              <span>{formatTimeRange(event.startTime, event.endTime)}</span>
+              <span className="mx-1.5 text-gray-400 dark:text-gray-500">•</span>
+              <span className="text-gray-500 dark:text-gray-400">{formatDuration()}</span>
+              {event.isRecurring && (
+                <span className="ml-1 text-blue-500 dark:text-blue-400 font-medium">↻</span>
+              )}
+            </div>
+
+            {/* Location */}
+            {event.location && (
+              <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
+                <MapPin className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
+                <span className="truncate">{event.location}</span>
+              </div>
+            )}
+            
+            {/* Description */}
+            {event.description && (
+              <p className="mt-2 text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {event.description}
+              </p>
+            )}
+            
+            {/* Join meeting button */}
+            {joinUrl && (
+              <div className="mt-3">
+                <Button 
+                  asChild 
+                  className="h-8 text-[13px] bg-gradient-to-b from-blue-500 to-blue-600 hover:to-blue-700 transition-all duration-200"
+                >
+                  <a
+                    href={joinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                    Join Meeting
+                  </a>
+                </Button>
+              </div>
+            )}
+
+            {/* Attendees section */}
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.06]">
               <div 
-                className="mt-1 border-t border-gray-100 dark:border-gray-800 pt-3"
+                className="flex justify-between items-center cursor-pointer"
                 onClick={() => setShowDetails(!showDetails)}
               >
-                {/* Attendee summary */}
-                <div className="flex justify-between items-center cursor-pointer">
-                  <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
-                    <Users className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
-                    <span>{acceptedCount}/{totalCount} attending</span>
-                  </div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                    {showDetails ? "Hide details" : "Show details"}
+                <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
+                  <Users className="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-gray-400" />
+                  <span>{acceptedCount}/{totalCount} attending</span>
+                </div>
+                <div className="text-xs text-blue-500 dark:text-blue-400 font-medium hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+                  {showDetails ? "Hide details" : "Show details"}
+                </div>
+              </div>
+              
+              {/* Attendee details */}
+              {showDetails && (
+                <div className="mt-2 space-y-2 pt-2 border-t border-gray-100 dark:border-white/[0.06]">
+                  {event.attendees.map((attendee, index) => (
+                    <div key={index} className="flex items-center justify-between text-[12px] text-gray-700 dark:text-gray-300">
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] text-gray-600 dark:text-gray-400 border border-gray-200/80 dark:border-white/[0.05]">
+                          {attendee.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="truncate max-w-[180px]">{attendee.name}</span>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(attendee.responseStatus)}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="flex items-center text-[12px] text-gray-600 dark:text-gray-400 mt-1 pt-2 border-t border-gray-100 dark:border-white/[0.06]">
+                    <User className="w-3.5 h-3.5 mr-1" />
+                    <span>Organized by {event.organizer}</span>
                   </div>
                 </div>
-                
-                {/* Attendee details */}
-                {showDetails && (
-                  <div className="mt-2 space-y-2 pt-2 border-t border-gray-100 dark:border-gray-800/50">
-                    {event.attendees.map((attendee, index) => (
-                      <div key={index} className="flex items-center justify-between text-[12px] text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-1.5 overflow-hidden">
-                          <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] text-gray-600 dark:text-gray-300">
-                            {attendee.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="truncate max-w-[120px]">{attendee.name}</span>
-                        </div>
-                        <div>
-                          {getStatusIcon(attendee.responseStatus)}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    <div className="flex items-center text-[12px] text-gray-600 dark:text-gray-400 mt-1 pt-1 border-t border-gray-100 dark:border-gray-800/50">
-                      <User className="w-3.5 h-3.5 mr-1" />
-                      <span>Organized by {event.organizer}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -214,4 +233,4 @@ const GoogleCalendarCard = ({ event }: GoogleCalendarCardProps) => {
   )
 }
 
-export default GoogleCalendarCard 
+export default GoogleCalendarCard

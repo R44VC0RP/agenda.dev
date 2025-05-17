@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
 import { useRouter, usePathname } from "next/navigation"
-import { FaSearch } from "react-icons/fa"
+import { FaSearch, FaCalendar } from "react-icons/fa"
 import { motion } from "framer-motion"
 import TodoItem from "@/components/todo-item"
 import type { Todo, Comment } from "@/lib/types"
@@ -17,12 +17,89 @@ import TwitterDMCard from "@/components/new/TwitterDMCard"
 import VercelBuildCard from "@/components/new/VercelBuildCard"
 import PostHogCard from "@/components/new/PostHogCard"
 import SlackMessageCard from "@/components/new/SlackMessageCard"
+import { getCalendarEvents } from "@/lib/google-calendar"
+import { FaChevronDown } from 'react-icons/fa'
+import { useScroll, useTransform } from 'framer-motion'
 
-type ViewOption = "all" | "today" | "week" | "month"
+type ViewOption = "today" | "week" | "month"
 
 // Type guard function to validate ViewOption
 const isValidViewOption = (value: string): value is ViewOption => {
-  return ["all", "today", "week", "month"].includes(value)
+  return ["today", "week", "month"].includes(value)
+}
+
+interface CalendarEvent {
+  id: string
+  summary: string
+  description?: string
+  location?: string
+  hangoutLink?: string
+  htmlLink?: string
+  recurringEventId?: string
+  creator?: {
+    email: string
+  }
+  attendees?: Array<{
+    email: string
+    responseStatus?: 'accepted' | 'tentative' | 'declined' | 'needsAction'
+  }>
+  start: {
+    dateTime?: string
+    date?: string
+  }
+  end: {
+    dateTime?: string
+    date?: string
+  }
+}
+
+// Function to determine event urgency color and label
+const getEventUrgency = (eventStart: string | undefined, theme: string | undefined): { color: string; label?: string } => {
+  if (!eventStart) return { color: theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100' }
+  
+  const now = new Date()
+  const start = new Date(eventStart)
+  const hoursUntil = (start.getTime() - now.getTime()) / (1000 * 60 * 60)
+  
+  if (hoursUntil < 0) return { 
+    color: theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100',
+    label: 'Past'
+  }
+  if (hoursUntil <= 1) return { 
+    color: theme === 'dark' ? 'bg-red-900/50' : 'bg-red-100',
+    label: 'Starting soon'
+  }
+  if (hoursUntil <= 3) return { 
+    color: theme === 'dark' ? 'bg-orange-900/50' : 'bg-orange-100',
+    label: 'In a few hours'
+  }
+  if (hoursUntil <= 24) return { 
+    color: theme === 'dark' ? 'bg-yellow-900/50' : 'bg-yellow-100',
+    label: 'Today'
+  }
+  return { 
+    color: theme === 'dark' ? 'bg-emerald-900/50' : 'bg-emerald-100'
+  }
+}
+
+// Transform Google Calendar event to GoogleCalendarCard format
+const transformCalendarEvent = (event: CalendarEvent) => {
+  return {
+    id: event.id,
+    title: event.summary,
+    description: event.description,
+    location: event.location,
+    startTime: event.start.dateTime!,
+    endTime: event.end.dateTime!,
+    organizer: event.creator?.email || '',
+    attendees: (event.attendees || []).map(a => ({
+      name: a.email.split('@')[0],
+      email: a.email,
+      responseStatus: a.responseStatus
+    })),
+    url: event.htmlLink || '',
+    isRecurring: !!event.recurringEventId
+  }
 }
 
 interface NewPageClientProps {
@@ -55,6 +132,55 @@ const usePersistentState = <T,>(key: string, initialValue: T) => {
   return [value, setValue] as const
 }
 
+// Component to provide gradient fades and scroll indicator
+function ScrollableSection({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [hasOverflow, setHasOverflow] = useState(false)
+  const { scrollYProgress } = useScroll({ container: ref })
+  const opacity = useTransform(scrollYProgress, [0.95, 1], [1, 0])
+  useEffect(() => {
+    const el = ref.current
+    if (el) {
+      const check = () => setHasOverflow(el.scrollHeight > el.clientHeight)
+      check()
+      el.addEventListener('scroll', check)
+      window.addEventListener('resize', check)
+      return () => {
+        el.removeEventListener('scroll', check)
+        window.removeEventListener('resize', check)
+      }
+    }
+  }, [])
+
+  return (
+    <div className="flex-1 flex flex-col min-h-[300px] min-h-0 relative">
+      <div
+        ref={ref}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex-1 overflow-y-auto overflow-x-hidden pr-1 scroll-smooth relative scrollbar-hide"
+      >
+        {/* Hide webkit scrollbar */}
+        <style jsx>{`
+          div::-webkit-scrollbar { display: none; }
+        `}</style>
+        {/* Top gradient */}
+        <div className="sticky top-0 left-0 right-0 h-6 bg-gradient-to-b from-gray-100 dark:from-[#09090B] to-transparent z-5 pointer-events-none" />
+        <div className="relative z-1 space-y-4 p-1">{children}</div>
+        {/* Bottom gradient */}
+        <div className="sticky bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-100 dark:from-[#09090B] to-transparent z-5 pointer-events-none" />
+      </div>
+      {hasOverflow && (
+        <motion.div
+          style={{ opacity }}
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 animate-bounce text-gray-400 z-10 pointer-events-none"
+        >
+          <FaChevronDown className="h-4 w-4" />
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 export default function NewPageClient({ initialTodos, initialViewOption }: NewPageClientProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -62,9 +188,10 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
   const { resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
   const [viewOption, setViewOption] = useState<ViewOption>(
-    isValidViewOption(initialViewOption) ? initialViewOption : "all"
+    isValidViewOption(initialViewOption) ? initialViewOption : "today"
   )
   const [todos, setTodos] = usePersistentState<Todo[]>('new_todos', initialTodos)
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [columnCount, setColumnCount] = useState(4)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -96,11 +223,26 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
     }
   }, [])
   
-  // Update URL when view option changes
+  // Update URL and fetch calendar events when view option changes
   useEffect(() => {
     const newUrl = `${pathname}?view=${viewOption}`
     router.push(newUrl, { scroll: false })
-  }, [viewOption, pathname, router])
+
+    // Fetch calendar events
+    const fetchEvents = async () => {
+      if (!session?.user?.id) return
+      try {
+        const response = await fetch(`/api/development/google-calendar?period=${viewOption}`)
+        if (!response.ok) throw new Error('Failed to fetch calendar events')
+        const data = await response.json()
+        setCalendarEvents(data.events || [])
+      } catch (error) {
+        console.error('Error fetching calendar events:', error)
+      }
+    }
+
+    fetchEvents()
+  }, [viewOption, pathname, router, session?.user?.id])
   
   // Clear todos and localStorage on signout
   useEffect(() => {
@@ -424,7 +566,7 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
           name: 'product-updates',
           isPrivate: false
         },
-        timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+        timestamp: new Date(Date.now() - 1800000).toISOString(),
         url: 'https://slack.com',
         threadCount: 5,
         reactions: [
@@ -554,7 +696,7 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-[#09090B] text-gray-900 dark:text-white p-4 transition-colors duration-200">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-[#09090B] text-gray-900 dark:text-white p-4 transition-colors duration-200">
       {/* Small header with logo in top corner */}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center">
@@ -565,7 +707,7 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
         <div className="flex items-center space-x-3">
           {/* View Options - Small pill selector (only filters todos) */}
           <div className="bg-white dark:bg-[#131316] rounded-full p-1 inline-flex mr-2 shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24),0px_0px_0px_1px_rgba(0,0,0,1.00),inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] transition-colors duration-200">
-            {["today", "week", "month", "all"].map((option) => (
+            {["today", "week", "month"].map((option) => (
               <button
                 key={option}
                 onClick={() => setViewOption(option as ViewOption)}
@@ -610,20 +752,46 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
         </motion.div>
       </div>
       
-      {/* Main content area - takes up remaining space and aligns content to bottom */}
-      <div className="flex-1 flex flex-col justify-end">
+      {/* Main content area with fixed height and scrollable columns */}
+      <div className="flex-1 flex flex-col min-h-0 gap-4">
         {/* Responsive grid for content columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 auto-rows-min">
-          {columns.map((columnItems, colIndex) => (
-            <div key={`column-${colIndex}`} className="flex flex-col justify-end">
-              <div className="space-y-4 overflow-y-auto pb-4">
-                {columnItems.map((item, itemIndex) => (
-                  <div key={`item-${colIndex}-${itemIndex}`} className="w-full">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 h-full">
+          {/* Column 1: Todos */}
+          <ScrollableSection>
+            {todos.filter(todo => !todo.completed).map(todo => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggle={handleToggleTodo}
+                onDelete={handleDeleteTodo}
+                onAddComment={handleAddComment}
+                onDeleteComment={handleDeleteComment}
+                onReschedule={handleRescheduleTodo}
+              />
+            ))}
+          </ScrollableSection>
+
+          {/* Column 2: Calendar Events */}
+          <ScrollableSection>
+            {calendarEvents
+              .filter(event => event.start.dateTime) // Filter out all-day events
+              .map(event => (
+                <GoogleCalendarCard
+                  key={event.id}
+                  event={transformCalendarEvent(event)}
+                />
+              ))}
+          </ScrollableSection>
+
+          {/* Columns 3-4: Other Items */}
+          {Array.from({ length: columnCount - 2 }).map((_, idx) => (
+            <ScrollableSection key={`other-column-${idx}`}>
+              {columns[idx + 2]?.map((item, itemIndex) => (
+                <div key={`item-${idx}-${itemIndex}`} className="w-full">
+                  {item}
+                </div>
+              ))}
+            </ScrollableSection>
           ))}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { db } from "./db";
 import * as schema from "./db/schema";
 import Stripe from "stripe";
 import { stripe } from "@better-auth/stripe";
+import { mcp } from "better-auth/plugins"
 
 // Calendar-specific scopes needed for testing
 const CALENDAR_SCOPES = [
@@ -57,15 +58,22 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
     usePlural: true, // This will automatically map tables to their plural form (e.g., user -> users)
+    
   }),
   emailAndPassword: {
     enabled: true,
   },
   socialProviders: {
     google: {
+      prompt: 'select_account',
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      scopes: CALENDAR_SCOPES // Pass array directly
+      scope: [
+        'https://www.googleapis.com/auth/calendar.events',
+        'https://www.googleapis.com/auth/calendar.events.readonly',
+        'https://www.googleapis.com/auth/calendar.readonly',
+        'https://www.googleapis.com/auth/calendar.settings.readonly'
+      ],
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID,
@@ -82,6 +90,9 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    mcp({
+      loginPage: "/"
+    }),
     stripe({
       stripeClient,
       stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
