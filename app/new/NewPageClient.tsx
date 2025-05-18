@@ -98,7 +98,8 @@ const transformCalendarEvent = (event: CalendarEvent) => {
       responseStatus: a.responseStatus
     })),
     url: event.htmlLink || '',
-    isRecurring: !!event.recurringEventId
+    isRecurring: !!event.recurringEventId,
+    hangoutLink: event.hangoutLink,
   }
 }
 

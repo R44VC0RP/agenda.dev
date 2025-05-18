@@ -65,7 +65,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      prompt: 'select_account',
+      prompt: 'consent',  // Force consent screen to appear
+      accessType: 'offline', // Enable refresh token
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       scope: [
