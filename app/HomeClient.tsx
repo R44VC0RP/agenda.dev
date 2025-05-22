@@ -11,6 +11,7 @@ import ViewToggle from "@/components/view-toggle"
 import LoginButton from "@/components/LoginButton"
 import FeedbackWidget from "@/components/feedback-widget"
 import AgendaIcon from "@/components/AgendaIcon"
+import DevModal from "@/components/development/DevModal"
 import type { Todo, Comment, Workspace } from "@/lib/types"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSession, subscription } from "@/lib/auth-client"
@@ -460,6 +461,48 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     }
   }
 
+  const addMultipleTodos = async (todos: Todo[]) => {
+    // Create temporary IDs for optimistic updates
+    const todosWithTempIds = todos.map(todo => ({
+      ...todo,
+      id: `temp-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}`,
+      comments: [],
+      userId: session?.user?.id || 'local',
+      workspaceId: currentWorkspace,
+    }))
+
+    // Optimistic update - add all todos at once
+    setTodos(prev => [...prev, ...todosWithTempIds])
+
+    if (session?.user) {
+      // Process todos sequentially to avoid overwhelming the server
+      for (const todo of todosWithTempIds) {
+        try {
+          const res = await fetch('/api/todos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: todo.title,
+              dueDate: todo.dueDate,
+              urgency: todo.urgency,
+              workspaceId: currentWorkspace
+            }),
+          })
+          const serverTodo = await res.json()
+
+          // Replace the temporary todo with the server response
+          setTodos(prev => prev.map(t =>
+            t.id === todo.id ? { ...serverTodo, comments: [] } : t
+          ))
+        } catch (error) {
+          console.error(`Failed to add todo "${todo.title}":`, error)
+          // Remove the failed todo from the list
+          setTodos(prev => prev.filter(t => t.id !== todo.id))
+        }
+      }
+    }
+  }
+
   const toggleTodo = async (id: string) => {
     const todoToUpdate = todos.find(t => t.id === id)
     if (!todoToUpdate) return
@@ -753,15 +796,13 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     }
   }
 
-  const handleDragEnd = useCallback((result: DropResult) => {
+    const handleDragEnd = useCallback((result: DropResult) => {
     if (isMobile) return; // Prevent drag end handling on mobile
 
     const { destination, source, draggableId } = result;
 
-    // If there's no destination or the item was dropped in its original position
-    if (!destination ||
-      (destination.droppableId === source.droppableId &&
-        destination.index === source.index)) {
+    // If there's no destination, do nothing
+    if (!destination) {
       return;
     }
 
@@ -769,48 +810,93 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     const todo = todos.find(t => t.id === draggableId);
     if (!todo) return;
 
-    // Compute new due date based on destination column
+    // Parse droppable IDs to understand destination column
     const isDesktop = destination.droppableId.startsWith('desktop');
     const isTablet = destination.droppableId.startsWith('tablet');
     const cols = isDesktop ? 3 : isTablet ? 2 : 1;
     const parts = destination.droppableId.split('-');
     const colIdx = parseInt(parts[parts.length - 1]!, 10);
+    
     if (Number.isNaN(colIdx)) {
-      console.warn('Unhandled droppableId:', destination.droppableId);
+      console.warn('Invalid droppableId:', destination.droppableId);
       return;
     }
-    const newDateObj = computeNewDueDate(colIdx, cols);
-    const formattedDate = `${newDateObj.getFullYear()}-${String(newDateObj.getMonth() + 1).padStart(2, '0')}-${String(newDateObj.getDate()).padStart(2, '0')}`;
-    const updatedTodo = { ...todo, dueDate: `${formattedDate}T00:00:00.000Z` };
 
-    // Create new array with updated todo
-    const newTodos = todos.filter(t => t.id !== draggableId);
-    newTodos.splice(destination.index, 0, updatedTodo);
+    // Check if this is a movement between different columns
+    const isColumnChange = source.droppableId !== destination.droppableId;
+    
+    // Only update if moving to a different column (requiring date change)
+    if (isColumnChange) {
+      // Store original state for potential rollback
+      const originalTodos = todos;
+      
+      // Compute the new due date
+      const newDateObj = computeNewDueDate(colIdx, cols);
+      const formattedDate = `${newDateObj.getFullYear()}-${String(newDateObj.getMonth() + 1).padStart(2, '0')}-${String(newDateObj.getDate()).padStart(2, '0')}`;
+      
+      const updatedTodo = { 
+        ...todo, 
+        dueDate: `${formattedDate}T00:00:00.000Z`,
+        updatedAt: new Date()
+      };
 
-    // Update state
-    setTodos(newTodos);
+      // **INSTANT OPTIMISTIC UPDATE**: Simple and immediate
+      setTodos(prev => prev.map(t => t.id === draggableId ? updatedTodo : t));
 
-    // Log the update
-    console.log(`Todo "${todo.title}" moved to ${destination.droppableId} at index ${destination.index}`);
+      console.log(`✅ Todo "${todo.title}" moved to ${destination.droppableId}`);
 
-    // Update the database after animations finish
-    if (session?.user) {
-      dragTimeoutRef.current = window.setTimeout(async () => {
-        try {
-          const res = await fetch('/api/todos', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: draggableId, dueDate: updatedTodo.dueDate }),
-          });
-          if (!res.ok) throw new Error('Failed to update todo via drag-and-drop');
-          const serverTodo = await res.json();
-          setTodos(prev => prev.map(t => t.id === draggableId ? serverTodo : t));
-        } catch (err) {
-          console.error('❌ Error updating todo via drag:', err);
+      // Update the database
+      if (session?.user) {
+        // Clear any existing timeout to prevent conflicts
+        if (dragTimeoutRef.current !== null) {
+          clearTimeout(dragTimeoutRef.current);
+          dragTimeoutRef.current = null;
         }
-      }, 350);
+
+        // Sync with server
+        requestAnimationFrame(async () => {
+          try {
+            const res = await fetch('/api/todos', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                id: draggableId, 
+                dueDate: updatedTodo.dueDate,
+                updatedAt: updatedTodo.updatedAt 
+              }),
+            });
+            
+            if (!res.ok) {
+              throw new Error(`Server responded with ${res.status}: ${res.statusText}`);
+            }
+            
+            const serverTodo = await res.json();
+            
+            // Update with server response to ensure consistency
+            setTodos(prev => prev.map(t => t.id === draggableId ? {
+              ...t,
+              ...serverTodo,
+              dueDate: serverTodo.dueDate,
+              updatedAt: serverTodo.updatedAt
+            } : t));
+            
+            console.log(`🔄 Todo "${todo.title}" sync completed with server`);
+            
+          } catch (err) {
+            console.error('❌ Error updating todo via drag:', err);
+            
+            // **ROLLBACK**: Revert optimistic update on error
+            setTodos(originalTodos);
+            
+            // Show user-friendly error message
+            toast.error(`Failed to move "${todo.title}". Please try again.`);
+          }
+        });
+      }
     }
-  }, [isMobile, todos, session?.user]);
+    // For same-column reordering, we don't need to do anything as the visual feedback
+    // from the drag library is sufficient and we don't change dates for same-column moves
+  }, [isMobile, todos, session?.user, computeNewDueDate, setTodos]);
 
   // Check for 'settings=true' query param to auto-open settings dialog
   useEffect(() => {
@@ -826,6 +912,17 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
         <h1 className="text-xl hidden md:block">agenda.dev</h1>
       </div>
       <div className="absolute top-4 right-4 flex items-center space-x-2 justify-center md:mb-0 md:mx-0 md:justify-start z-20">
+        {session?.user && (
+          <a
+            href="/new"
+            className="h-8 px-3 rounded-full bg-white dark:bg-[#131316] flex items-center gap-2 shadow-[0px_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.24),0px_0px_0px_1px_rgba(0,0,0,1.00),inset_0px_0px_0px_1px_rgba(255,255,255,0.08)] transition-colors duration-200"
+          >
+            <span className="text-sm text-gray-900 dark:text-white flex items-center">
+              New Tab
+            </span>
+          </a>
+        )}
+        {session?.user && <DevModal />}
         {session?.user && activePlan !== "pro" && !isMobile && (
           <button
             onClick={() => setShowSettings(true)}
@@ -874,7 +971,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
         >
           {/* Mobile Input (at bottom) */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-gray-100 dark:bg-[#09090B] border-t border-gray-200 dark:border-white/10">
-            <AITodoInput onAddTodo={addTodo} />
+            <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
           </div>
 
           {/* Desktop Input (at top) */}
@@ -887,7 +984,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
               initial={false}
               className={`${filteredTodos.length === 0 ? 'w-[600px]' : 'w-full'} sticky top-4 z-10`}
             >
-              <AITodoInput onAddTodo={addTodo} />
+              <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
             </motion.div>
             </motion.div>
           )}
@@ -923,7 +1020,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
               initial={false}
               className={`${filteredTodos.length === 0 ? 'w-[600px]' : 'w-full'} sticky  z-10`}
             >
-              <AITodoInput onAddTodo={addTodo} />
+              <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
             </motion.div>
           </motion.div>
           )}

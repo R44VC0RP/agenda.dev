@@ -22,6 +22,16 @@ const TodoSchema = z.object({
   }),
 });
 
+// Define schema for multiple tasks
+const MultipleTasksSchema = z.object({
+  isMultipleTasks: z.boolean(),
+  tasks: z.array(z.object({
+    title: z.string(),
+    suggestedDate: z.string().nullable().optional(),
+    suggestedUrgency: z.number().min(1).max(5).optional(),
+  })),
+});
+
 // Helper function to store conversation in Redis
 async function storeConversation(conversationId: string, data: any) {
   if (!redis) return
@@ -133,6 +143,76 @@ async function convertRelativeDate(dateStr: string): Promise<string> {
   } catch (error) {
     console.error(`❌ Error converting date:`, error)
     return dateStr // Return original string if conversion fails
+  }
+}
+
+/**
+ * Detect and split multiple tasks from a single input using AI
+ */
+async function detectMultipleTasks(input: string): Promise<{ isMultipleTasks: boolean; tasks: Array<{ title: string; suggestedDate?: string | null; suggestedUrgency?: number }> }> {
+  console.log(`🔍 Detecting multiple tasks in: "${input}"`)
+  
+  const currentTime = new Date().toISOString()
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+  
+  try {
+    const { text: response } = await generateText({
+      model: openai('gpt-4o-mini'), // Use faster model for task detection
+      system: `You are a task detection specialist. Analyze the input and determine if it contains multiple distinct tasks.
+
+Current time: ${currentTime}
+Today: ${todayName}
+
+CRITICAL RULES:
+1. Only split if there are clearly MULTIPLE DISTINCT TASKS
+2. Don't split if it's a single task with multiple steps
+3. Look for conjunctions like "and", "then", "also", "plus"
+4. Each task should be actionable independently
+5. Extract dates and times when mentioned (convert relative dates to absolute)
+6. If no date/time is specified, leave suggestedDate as null
+7. NEVER suggest dates/times in the past - always use future dates
+
+Output ONLY valid JSON in this exact format:
+{
+  "isMultipleTasks": boolean,
+  "tasks": [
+    {
+      "title": "Clean task title (without date/time info)",
+      "suggestedDate": null or "YYYY-MM-DDTHH:MM:SS",
+      "suggestedUrgency": 1-5
+    }
+  ]
+}
+
+Examples:
+Input: "Feed the turtle and buy napkins"
+Output: {"isMultipleTasks": true, "tasks": [{"title": "Feed the turtle", "suggestedDate": null, "suggestedUrgency": 3}, {"title": "Buy napkins", "suggestedDate": null, "suggestedUrgency": 2}]}
+
+Input: "Call mom at 3pm and schedule dentist appointment for tomorrow"
+Output: {"isMultipleTasks": true, "tasks": [{"title": "Call mom", "suggestedDate": "2024-04-27T15:00:00", "suggestedUrgency": 2}, {"title": "Schedule dentist appointment", "suggestedDate": "2024-04-28T10:00:00", "suggestedUrgency": 3}]}
+
+Input: "Prepare presentation for Monday meeting"
+Output: {"isMultipleTasks": false, "tasks": [{"title": "Prepare presentation for Monday meeting", "suggestedDate": "2024-04-29T09:00:00", "suggestedUrgency": 4}]}
+
+Input: "Buy groceries, workout at 6pm, and call investor tomorrow morning"
+Output: {"isMultipleTasks": true, "tasks": [{"title": "Buy groceries", "suggestedDate": null, "suggestedUrgency": 2}, {"title": "Workout", "suggestedDate": "2024-04-27T18:00:00", "suggestedUrgency": 3}, {"title": "Call investor", "suggestedDate": "2024-04-28T09:00:00", "suggestedUrgency": 4}]}`,
+      prompt: input,
+      temperature: 0.1,
+      maxTokens: 800,
+    });
+
+    const parsed = JSON.parse(response);
+    const validated = MultipleTasksSchema.parse(parsed);
+    
+    console.log(`✅ Task detection result: ${validated.isMultipleTasks ? `${validated.tasks.length} tasks detected` : 'Single task detected'}`);
+    return validated;
+  } catch (error) {
+    console.error(`❌ Error detecting multiple tasks:`, error);
+    // Fallback to single task
+    return {
+      isMultipleTasks: false,
+      tasks: [{ title: input, suggestedUrgency: 3 }]
+    };
   }
 }
 
@@ -461,6 +541,37 @@ export async function POST(request: NextRequest) {
     console.log(`🧩 Collected values:`, collectedValues)
     console.log(`🔍 Pending fields: ${pendingFields.join(', ') || 'none'}`)
     console.log(`📊 Field attempts:`, fieldAttempts)
+    
+    // Check if this is a fresh conversation (no collected values and no pending fields)
+    const isFreshConversation = Object.keys(collectedValues).length === 0 && pendingFields.length === 0
+    
+    // If it's a fresh conversation, check for multiple tasks first
+    if (isFreshConversation) {
+      console.log(`🔍 Fresh conversation detected, checking for multiple tasks`)
+      const multiTaskResult = await detectMultipleTasks(message)
+      
+      if (multiTaskResult.isMultipleTasks && multiTaskResult.tasks.length > 1) {
+        console.log(`✅ Multiple tasks detected: ${multiTaskResult.tasks.length} tasks`)
+        
+        // Return multiple tasks response
+        return NextResponse.json({
+          text: `I detected ${multiTaskResult.tasks.length} separate tasks. I'll help you create them one by one.`,
+          html: `<multiple_tasks_detected>
+<task_count>${multiTaskResult.tasks.length}</task_count>
+<tasks>${JSON.stringify(multiTaskResult.tasks)}</tasks>
+</multiple_tasks_detected>`,
+          values: {},
+          stillNeeded: [],
+          isComplete: false,
+          isMultipleTasks: true,
+          tasks: multiTaskResult.tasks,
+          validation: { valid: true },
+          fieldAttempts: {},
+          fallbackApplied: false,
+          suggestions: []
+        })
+      }
+    }
     
     // Try to retrieve existing conversation from Redis
     let existingConversation = null

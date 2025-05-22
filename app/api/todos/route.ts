@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { todos, comments, users, workspaces, workspaceMembers } from '@/lib/db/schema';
-import { and, eq, or, isNull } from 'drizzle-orm';
+import { and, eq, or, isNull, gte, lte } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
@@ -81,9 +81,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the workspaceId from query parameter
+    // Get query parameters
     const url = new URL(req.url);
     const workspaceIdParam = url.searchParams.get('workspaceId');
+    const viewOption = url.searchParams.get('view') || 'all';
     
     // Validate workspaceId if provided
     let workspaceId: string | null = null;
@@ -95,67 +96,63 @@ export async function GET(req: Request) {
       }
     }
 
-    // Build base query
-    let query = db.select({
+    // Calculate date filters based on view option
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
+    // Build where conditions
+    let whereConditions: any = eq(todos.userId, session.user.id);
+    
+    // Add date filter based on viewOption
+    if (viewOption === 'today') {
+      whereConditions = and(
+        whereConditions,
+        gte(todos.dueDate, today.toISOString()),
+        lte(todos.dueDate, endOfToday.toISOString())
+      );
+    } else if (viewOption === 'week') {
+      // End of this week (Sunday)
+      const endOfWeek = new Date(today);
+      const daysUntilSunday = 7 - today.getDay();
+      endOfWeek.setDate(today.getDate() + daysUntilSunday);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      whereConditions = and(
+        whereConditions,
+        gte(todos.dueDate, today.toISOString()),
+        lte(todos.dueDate, endOfWeek.toISOString())
+      );
+    } else if (viewOption === 'month') {
+      // End of this month
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      
+      whereConditions = and(
+        whereConditions,
+        gte(todos.dueDate, today.toISOString()),
+        lte(todos.dueDate, endOfMonth.toISOString())
+      );
+    }
+    
+    // Add workspace filter if provided
+    if (workspaceId) {
+      whereConditions = and(
+        whereConditions,
+        eq(todos.workspaceId, workspaceId)
+      );
+    }
+
+    // Execute query with all filters
+    const userTodos = await db.select({
       todos: todos,
       comments: comments,
       commentUser: users
     })
     .from(todos)
-    .where(eq(todos.userId, session.user.id))
+    .where(whereConditions)
     .leftJoin(comments, eq(comments.todoId, todos.id))
     .leftJoin(users, eq(users.id, comments.userId));
-
-    // Filter by workspace if provided
-    if (workspaceId) {
-      // Create a new query with the additional condition
-      const userTodos = await db.select({
-        todos: todos,
-        comments: comments,
-        commentUser: users
-      })
-      .from(todos)
-      .where(and(
-        eq(todos.userId, session.user.id),
-        eq(todos.workspaceId, workspaceId)
-      ))
-      .leftJoin(comments, eq(comments.todoId, todos.id))
-      .leftJoin(users, eq(users.id, comments.userId));
-      
-      // Group comments by todo
-      const groupedTodos = userTodos.reduce((acc: any[], row) => {
-        const todo = acc.find(t => t.id === row.todos.id);
-        if (todo) {
-          if (row.comments) {
-            todo.comments.push({
-              ...row.comments,
-              user: row.commentUser ? {
-                name: row.commentUser.name,
-                image: row.commentUser.image
-              } : null
-            });
-          }
-        } else {
-          acc.push({
-            ...row.todos,
-            comments: row.comments ? [{
-              ...row.comments,
-              user: row.commentUser ? {
-                name: row.commentUser.name,
-                image: row.commentUser.image
-              } : null
-            }] : []
-          });
-        }
-        return acc;
-      }, []);
-
-      return NextResponse.json(groupedTodos);
-    }
-
-    // Get all todos if no workspace filter
-    const userTodos = await query;
-
+    
     // Group comments by todo
     const groupedTodos = userTodos.reduce((acc: any[], row) => {
       const todo = acc.find(t => t.id === row.todos.id);
