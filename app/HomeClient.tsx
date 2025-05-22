@@ -796,15 +796,13 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     }
   }
 
-  const handleDragEnd = useCallback((result: DropResult) => {
+    const handleDragEnd = useCallback((result: DropResult) => {
     if (isMobile) return; // Prevent drag end handling on mobile
 
     const { destination, source, draggableId } = result;
 
-    // If there's no destination or the item was dropped in its original position
-    if (!destination ||
-      (destination.droppableId === source.droppableId &&
-        destination.index === source.index)) {
+    // If there's no destination, do nothing
+    if (!destination) {
       return;
     }
 
@@ -812,89 +810,92 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     const todo = todos.find(t => t.id === draggableId);
     if (!todo) return;
 
-    // Compute new due date based on destination column
+    // Parse droppable IDs to understand destination column
     const isDesktop = destination.droppableId.startsWith('desktop');
     const isTablet = destination.droppableId.startsWith('tablet');
     const cols = isDesktop ? 3 : isTablet ? 2 : 1;
     const parts = destination.droppableId.split('-');
     const colIdx = parseInt(parts[parts.length - 1]!, 10);
+    
     if (Number.isNaN(colIdx)) {
-      console.warn('Unhandled droppableId:', destination.droppableId);
+      console.warn('Invalid droppableId:', destination.droppableId);
       return;
     }
-    const newDateObj = computeNewDueDate(colIdx, cols);
-    const formattedDate = `${newDateObj.getFullYear()}-${String(newDateObj.getMonth() + 1).padStart(2, '0')}-${String(newDateObj.getDate()).padStart(2, '0')}`;
-    const updatedTodo = { 
-      ...todo, 
-      dueDate: `${formattedDate}T00:00:00.000Z`,
-      dateUpdated: new Date().toISOString() // Update the dateUpdated field
-    };
 
-    // **OPTIMISTIC UPDATE**: Immediately update UI for smooth user experience
-    const newTodos = todos.filter(t => t.id !== draggableId);
-    newTodos.splice(destination.index, 0, updatedTodo);
-    setTodos(newTodos);
+    // Check if this is a movement between different columns
+    const isColumnChange = source.droppableId !== destination.droppableId;
+    
+    // Only update if moving to a different column (requiring date change)
+    if (isColumnChange) {
+      // Store original state for potential rollback
+      const originalTodos = todos;
+      
+      // Compute the new due date
+      const newDateObj = computeNewDueDate(colIdx, cols);
+      const formattedDate = `${newDateObj.getFullYear()}-${String(newDateObj.getMonth() + 1).padStart(2, '0')}-${String(newDateObj.getDate()).padStart(2, '0')}`;
+      
+      const updatedTodo = { 
+        ...todo, 
+        dueDate: `${formattedDate}T00:00:00.000Z`,
+        updatedAt: new Date()
+      };
 
-    // Store original state for potential rollback
-    const originalTodos = todos;
-    const originalTodo = todo;
+      // **INSTANT OPTIMISTIC UPDATE**: Simple and immediate
+      setTodos(prev => prev.map(t => t.id === draggableId ? updatedTodo : t));
 
-    // Log the update
-    console.log(`✅ Todo "${todo.title}" moved to ${destination.droppableId} at index ${destination.index} (optimistic)`);
+      console.log(`✅ Todo "${todo.title}" moved to ${destination.droppableId}`);
 
-    // Update the database with immediate sync (no artificial delay)
-    if (session?.user) {
-      // Clear any existing timeout to prevent conflicts
-      if (dragTimeoutRef.current !== null) {
-        clearTimeout(dragTimeoutRef.current);
-        dragTimeoutRef.current = null;
-      }
-
-      // Use requestAnimationFrame to ensure DOM has updated before server sync
-      requestAnimationFrame(async () => {
-        try {
-          const res = await fetch('/api/todos', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              id: draggableId, 
-              dueDate: updatedTodo.dueDate,
-              dateUpdated: updatedTodo.dateUpdated 
-            }),
-          });
-          
-          if (!res.ok) {
-            throw new Error(`Server responded with ${res.status}: ${res.statusText}`);
-          }
-          
-          const serverTodo = await res.json();
-          
-          // Update with server response to ensure consistency
-          setTodos(prev => prev.map(t => t.id === draggableId ? {
-            ...serverTodo,
-            // Ensure we keep any other local changes that might have happened
-            ...t,
-            // But prioritize server data for core fields
-            dueDate: serverTodo.dueDate,
-            dateUpdated: serverTodo.dateUpdated
-          } : t));
-          
-          console.log(`🔄 Todo "${todo.title}" sync completed with server`);
-          
-        } catch (err) {
-          console.error('❌ Error updating todo via drag:', err);
-          
-          // **ROLLBACK**: Revert optimistic update on error
-          setTodos(originalTodos);
-          
-          // Show user-friendly error message
-          toast.error(`Failed to move "${originalTodo.title}". Please try again.`);
-          
-          // Optional: Add retry mechanism
-          console.log('🔄 Rolling back to original state due to sync error');
+      // Update the database
+      if (session?.user) {
+        // Clear any existing timeout to prevent conflicts
+        if (dragTimeoutRef.current !== null) {
+          clearTimeout(dragTimeoutRef.current);
+          dragTimeoutRef.current = null;
         }
-      });
+
+        // Sync with server
+        requestAnimationFrame(async () => {
+          try {
+            const res = await fetch('/api/todos', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                id: draggableId, 
+                dueDate: updatedTodo.dueDate,
+                updatedAt: updatedTodo.updatedAt 
+              }),
+            });
+            
+            if (!res.ok) {
+              throw new Error(`Server responded with ${res.status}: ${res.statusText}`);
+            }
+            
+            const serverTodo = await res.json();
+            
+            // Update with server response to ensure consistency
+            setTodos(prev => prev.map(t => t.id === draggableId ? {
+              ...t,
+              ...serverTodo,
+              dueDate: serverTodo.dueDate,
+              updatedAt: serverTodo.updatedAt
+            } : t));
+            
+            console.log(`🔄 Todo "${todo.title}" sync completed with server`);
+            
+          } catch (err) {
+            console.error('❌ Error updating todo via drag:', err);
+            
+            // **ROLLBACK**: Revert optimistic update on error
+            setTodos(originalTodos);
+            
+            // Show user-friendly error message
+            toast.error(`Failed to move "${todo.title}". Please try again.`);
+          }
+        });
+      }
     }
+    // For same-column reordering, we don't need to do anything as the visual feedback
+    // from the drag library is sufficient and we don't change dates for same-column moves
   }, [isMobile, todos, session?.user, computeNewDueDate, setTodos]);
 
   // Check for 'settings=true' query param to auto-open settings dialog

@@ -39,6 +39,7 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
   const [todoTitle, setTodoTitle] = useState<string>("")
   const [clickedSuggestion, setClickedSuggestion] = useState<number | null>(null)
   const [isUrgencyButtonClicked, setIsUrgencyButtonClicked] = useState(false)
+  const [isSubmittingField, setIsSubmittingField] = useState(false)
   
   // Multi-task detection state
   const [showMultiTaskPreview, setShowMultiTaskPreview] = useState(false)
@@ -48,6 +49,9 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
   
   const inputRef = useRef<HTMLInputElement>(null)
   const { data: session } = useSession()
+  
+  // Ref to prevent duplicate submissions
+  const submissionInProgressRef = useRef(false)
 
   // OS-specific modifier key
   const modifierKey = "⌘" // Since we know user is on macOS
@@ -56,6 +60,13 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
+    }
+  }, [])
+
+  // Cleanup submission state on unmount
+  useEffect(() => {
+    return () => {
+      submissionInProgressRef.current = false
     }
   }, [])
 
@@ -87,6 +98,13 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
       if (pendingFields.includes("urgency") && pendingFields.length === 1) {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
           e.preventDefault();
+          
+          // Prevent duplicate submissions
+          if (submissionInProgressRef.current || isSubmittingField) {
+            console.log('⚠️ Keyboard submission already in progress, ignoring');
+            return;
+          }
+          
           // Simulate click animation
           setIsUrgencyButtonClicked(true);
           setTimeout(() => {
@@ -99,7 +117,7 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pendingFields, urgency]);
+  }, [pendingFields, urgency, isSubmittingField]);
 
   const extractSuggestions = (html: string): Suggestion[] => {
     const suggestionRegex = /<suggestion type="(date|time|datetime)" value="([^"]+)">([^<]+)<\/suggestion>/g
@@ -123,6 +141,11 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
     setCurrentPrompt("")
     setUrgency(3)
     setConversationId(uuidv4())
+    
+    // Reset submission states
+    submissionInProgressRef.current = false
+    setIsSubmittingField(false)
+    
     if (inputRef.current) {
       inputRef.current.focus()
     }
@@ -132,7 +155,7 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
     if (e) e.preventDefault()
     
     // Don't submit if already processing
-    if (isProcessing) return
+    if (isProcessing || submissionInProgressRef.current) return
     
     const valueToSubmit = suggestionValue || inputValue
     
@@ -243,7 +266,15 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
   }
   
   const handleFieldSubmit = async (field: string, value: string) => {
-    setIsProcessing(true)
+    // Prevent duplicate submissions
+    if (submissionInProgressRef.current || isSubmittingField) {
+      console.log('⚠️ Submission already in progress, ignoring duplicate request');
+      return;
+    }
+    
+    submissionInProgressRef.current = true;
+    setIsSubmittingField(true);
+    setIsProcessing(true);
     
     try {
       const response = await fetch("/api/parse-todo", {
@@ -322,11 +353,16 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
       console.error(`❌ Error processing ${field}:`, error)
       setCurrentPrompt(`Something went wrong. Please try again.`)
     } finally {
-      setIsProcessing(false)
+      submissionInProgressRef.current = false;
+      setIsSubmittingField(false);
+      setIsProcessing(false);
     }
   }
   
   const incrementUrgency = (amount: number) => {
+    // Don't allow urgency changes while submitting
+    if (isSubmittingField || isProcessing) return;
+    
     setUrgency((prev) => {
       const newValue = +(prev + amount).toFixed(1)
       return Math.min(Math.max(1, newValue), 5)
@@ -334,7 +370,12 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
   }
   
   const handleUrgencySubmit = () => {
-    handleFieldSubmit("urgency", urgency.toString())
+    // Prevent duplicate submissions
+    if (submissionInProgressRef.current || isSubmittingField) {
+      console.log('⚠️ Urgency submission already in progress, ignoring');
+      return;
+    }
+    handleFieldSubmit("urgency", urgency.toString());
   }
 
   // Multi-task handlers
@@ -577,7 +618,12 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => incrementUrgency(-0.5)}
-                      className="w-8 h-8 flex items-center justify-center rounded-[6px] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                      disabled={isSubmittingField || isProcessing}
+                      className={`w-8 h-8 flex items-center justify-center rounded-[6px] transition-colors ${
+                        isSubmittingField || isProcessing
+                          ? 'bg-gray-50 dark:bg-white/2 cursor-not-allowed opacity-50'
+                          : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                      }`}
                     >
                       <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     </button>
@@ -590,6 +636,11 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
                         if (e.key === "Enter") {
                           e.preventDefault()
                           if (e.metaKey || e.ctrlKey) {
+                            // Prevent duplicate submissions
+                            if (submissionInProgressRef.current || isSubmittingField) {
+                              console.log('⚠️ Inline keyboard submission already in progress, ignoring');
+                              return;
+                            }
                             setIsUrgencyButtonClicked(true);
                             setTimeout(() => {
                               handleUrgencySubmit();
@@ -598,30 +649,44 @@ export default function AITodoInput({ onAddTodo, onAddMultipleTodos }: AITodoInp
                           }
                         } else if (e.key === "ArrowLeft") {
                           e.preventDefault()
-                          incrementUrgency(-0.5)
+                          if (!isSubmittingField && !isProcessing) {
+                            incrementUrgency(-0.5)
+                          }
                         } else if (e.key === "ArrowRight") {
                           e.preventDefault()
-                          incrementUrgency(0.5)
+                          if (!isSubmittingField && !isProcessing) {
+                            incrementUrgency(0.5)
+                          }
                         }
                       }}
                     />
                     <button
                       onClick={() => incrementUrgency(0.5)}
-                      className="w-8 h-8 flex items-center justify-center rounded-[6px] bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                      disabled={isSubmittingField || isProcessing}
+                      className={`w-8 h-8 flex items-center justify-center rounded-[6px] transition-colors ${
+                        isSubmittingField || isProcessing
+                          ? 'bg-gray-50 dark:bg-white/2 cursor-not-allowed opacity-50'
+                          : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                      }`}
                     >
                       <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     </button>
                     <motion.button
                       onClick={handleUrgencySubmit}
+                      disabled={isSubmittingField || isProcessing}
                       animate={{ 
                         scale: isUrgencyButtonClicked ? 0.95 : 1,
                         background: isUrgencyButtonClicked ? 
                           "linear-gradient(to bottom, #8f71ff, #7c5aff)" : 
                           "linear-gradient(to bottom, #7c5aff, #6c47ff)"
                       }}
-                      className="ml-2 px-4 h-8 rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium hover:from-[#8f71ff] hover:to-[#7c5aff] active:from-[#6c47ff] active:to-[#5835ff] transition-all duration-200"
+                      className={`ml-2 px-4 h-8 rounded-[6px] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.16),0px_1px_2px_0px_rgba(0,0,0,0.20)] text-white text-[13px] font-medium transition-all duration-200 ${
+                        isSubmittingField || isProcessing 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'hover:from-[#8f71ff] hover:to-[#7c5aff] active:from-[#6c47ff] active:to-[#5835ff]'
+                      }`}
                     >
-                      Set Urgency ({modifierKey} + ↵)
+                      {isSubmittingField ? 'Setting...' : `Set Urgency (${modifierKey} + ↵)`}
                     </motion.button>
                   </div>
                 </div>

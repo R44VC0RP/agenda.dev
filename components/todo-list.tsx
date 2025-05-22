@@ -64,13 +64,10 @@ const AnimatedTodoItem = React.memo(({
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{
         // Simplified animations during drag to reduce jitter
-        opacity: isDraggingItem ? 0.95 : isInView ? 1 : 0.4,
-        scale: isDraggingItem ? 1.02 : isInView ? 1 : 0.95, // Slightly larger when dragging for better visibility
+        opacity: isDraggingItem ? 1 : isInView ? 1 : 0.4,
+        scale: isInView ? 1 : 0.95, // Remove scale effect when dragging
         y: isDraggingItem ? 0 : isInView ? 0 : 5,
-        // Add a subtle glow effect when dragging
-        boxShadow: isDraggingItem 
-          ? "0 8px 25px rgba(124, 90, 255, 0.15), 0 0 0 1px rgba(124, 90, 255, 0.1)" 
-          : "none",
+        // Remove glow effect when dragging
       }}
       exit={{ 
         opacity: 0, 
@@ -101,7 +98,7 @@ const AnimatedTodoItem = React.memo(({
       }}
       style={{
         transformOrigin: "center",
-        willChange: isDraggingItem ? "transform, opacity, box-shadow" : "transform, opacity",
+        willChange: isDraggingItem ? "transform, opacity" : "transform, opacity",
         position: "relative",
         zIndex: isDraggingItem ? 1000 : todo.completed ? 0 : 1,
         // Hardware acceleration
@@ -453,17 +450,11 @@ export default function TodoList({ todos, onToggle, onDelete, onAddComment, onDe
                   {...provided.dragHandleProps}
                   style={{
                     ...provided.draggableProps.style,
-                    // Enhanced drag preview styling
-                    opacity: snapshot.isDragging ? 0.9 : 1,
-                    transform: snapshot.isDragging 
-                      ? `${provided.draggableProps.style?.transform} rotate(2deg)` 
-                      : provided.draggableProps.style?.transform,
-                    // Improved z-index management
+                    // Clean drag styling without effects
                     zIndex: snapshot.isDragging ? 9999 : 'auto',
                     // Hardware acceleration for smoother movement
                     willChange: snapshot.isDragging ? 'transform' : 'auto',
                   }}
-                  className={`${snapshot.isDragging ? 'shadow-2xl' : ''}`}
                 >
                   <AnimatedTodoItem
                     todo={todo}
