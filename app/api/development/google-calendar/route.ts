@@ -39,8 +39,10 @@ export async function GET(request: Request) {
         timeMax.setDate(timeMin.getDate() + 1) // Default to today
     }
 
-    const events = await getCalendarEvents(userId!, timeMin, timeMax, 50)
-    console.log(events)
+    if (!userId) {
+   return new NextResponse('Not authenticated', { status: 401 })
+ }
+ const events = await getCalendarEvents(userId, timeMin, timeMax, 50)
 
     return NextResponse.json({
       status: 'ok',
@@ -49,10 +51,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Failed to fetch calendar events:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch calendar events'
-    return new NextResponse(
-      errorMessage,
-      { status: errorMessage.includes('Not authenticated') ? 401 : 500 }
-    )
+ return NextResponse.json({
+   status: 'error',
+   message: errorMessage
+ }, { status: errorMessage.includes('Not authenticated') ? 401 : 500 })
   }
 }
 
@@ -60,24 +62,36 @@ export async function POST(request: Request) {
   if (!isDevelopment) {
     return new NextResponse('Not available in production', { status: 403 })
   }
+try {
+  const session = await auth.api.getSession(request)
+  const userId = session?.user.id
+  const body = await request.json()
 
-  try {
-    const session = await auth.api.getSession(request)
-    const userId = session?.user.id
-    const body = await request.json()
+ // Validate action exists
+ if (!body.action) {
+   return NextResponse.json({
+     status: 'error',
+     message: 'Missing action parameter'
+   }, { status: 400 })
+ }
 
-    switch (body.action) {
-      case 'list_events':
-        const { timeMin, timeMax } = body
-        const startTime = timeMin ? new Date(timeMin) : new Date()
-        const endTime = timeMax ? new Date(timeMax) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        
-        const events = await getCalendarEvents(userId!, startTime, endTime, 10)
-        console.log(events)
-        return NextResponse.json({
-          status: 'success',
-          data: events
-        })
+  switch (body.action) {
+    case 'list_events':
+      const { timeMin, timeMax } = body
+      const startTime = timeMin ? new Date(timeMin) : new Date()
+      const endTime = timeMax ? new Date(timeMax) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      
+     if (!userId) {
+       return NextResponse.json({
+         status: 'error',
+         message: 'Not authenticated'
+       }, { status: 401 })
+     }
+     const events = await getCalendarEvents(userId, startTime, endTime, 10)
+      return NextResponse.json({
+        status: 'success',
+        data: events
+      })
 
 
       default:
@@ -89,10 +103,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Google Calendar operation failed:', error)
     const errorMessage = error instanceof Error ? error.message : 'Operation failed'
-    return NextResponse.json({
-      status: 'error',
-      message: errorMessage,
-      error: error instanceof Error ? error.stack : undefined
-    }, { status: errorMessage.includes('Not authenticated') ? 401 : 500 })
+return NextResponse.json({
+  status: 'error',
+  message: errorMessage,
+}, { status: errorMessage.includes('Not authenticated') ? 401 : 500 })
   }
 } 

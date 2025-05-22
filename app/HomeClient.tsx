@@ -461,6 +461,48 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     }
   }
 
+  const addMultipleTodos = async (todos: Todo[]) => {
+    // Create temporary IDs for optimistic updates
+    const todosWithTempIds = todos.map(todo => ({
+      ...todo,
+      id: `temp-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}`,
+      comments: [],
+      userId: session?.user?.id || 'local',
+      workspaceId: currentWorkspace,
+    }))
+
+    // Optimistic update - add all todos at once
+    setTodos(prev => [...prev, ...todosWithTempIds])
+
+    if (session?.user) {
+      // Process todos sequentially to avoid overwhelming the server
+      for (const todo of todosWithTempIds) {
+        try {
+          const res = await fetch('/api/todos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: todo.title,
+              dueDate: todo.dueDate,
+              urgency: todo.urgency,
+              workspaceId: currentWorkspace
+            }),
+          })
+          const serverTodo = await res.json()
+
+          // Replace the temporary todo with the server response
+          setTodos(prev => prev.map(t =>
+            t.id === todo.id ? { ...serverTodo, comments: [] } : t
+          ))
+        } catch (error) {
+          console.error(`Failed to add todo "${todo.title}":`, error)
+          // Remove the failed todo from the list
+          setTodos(prev => prev.filter(t => t.id !== todo.id))
+        }
+      }
+    }
+  }
+
   const toggleTodo = async (id: string) => {
     const todoToUpdate = todos.find(t => t.id === id)
     if (!todoToUpdate) return
@@ -886,7 +928,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
         >
           {/* Mobile Input (at bottom) */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-gray-100 dark:bg-[#09090B] border-t border-gray-200 dark:border-white/10">
-            <AITodoInput onAddTodo={addTodo} />
+            <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
           </div>
 
           {/* Desktop Input (at top) */}
@@ -899,7 +941,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
               initial={false}
               className={`${filteredTodos.length === 0 ? 'w-[600px]' : 'w-full'} sticky top-4 z-10`}
             >
-              <AITodoInput onAddTodo={addTodo} />
+              <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
             </motion.div>
             </motion.div>
           )}
@@ -935,7 +977,7 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
               initial={false}
               className={`${filteredTodos.length === 0 ? 'w-[600px]' : 'w-full'} sticky  z-10`}
             >
-              <AITodoInput onAddTodo={addTodo} />
+              <AITodoInput onAddTodo={addTodo} onAddMultipleTodos={addMultipleTodos} />
             </motion.div>
           </motion.div>
           )}

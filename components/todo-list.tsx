@@ -314,14 +314,19 @@ export default function TodoList({ todos, onToggle, onDelete, onAddComment, onDe
         diffDays = Infinity;
       }
       let group = columnCount - 1;
-      if (diffDays <= 0) group = 0;
+      // Todos without dates (diffDays = Infinity) or overdue/today go to first column
+      if (diffDays === Infinity || diffDays <= 0) group = 0;
       else if (columnCount === 3 && diffDays >= 1 && diffDays <= 7) group = 1;
       return { todo, diffDays, group };
     });
     // filter by column group
     const bucket = enriched.filter(x => x.group === columnIndex);
-    // for first column (overdue/today), show today's tasks above overdue
+    // for first column (overdue/today), show tasks without dates first, then today's tasks, then overdue
     if (columnIndex === 0 && columnCount >= 2) {
+      const noDateTasks = bucket
+        .filter(x => x.diffDays === Infinity)
+        .map(x => x.todo)
+        .sort((a, b) => a.title.localeCompare(b.title)); // Sort by title for tasks without dates
       const todayTasks = bucket
         .filter(x => x.diffDays === 0)
         .map(x => x.todo)
@@ -330,7 +335,7 @@ export default function TodoList({ todos, onToggle, onDelete, onAddComment, onDe
         .filter(x => x.diffDays < 0)
         .map(x => x.todo)
         .sort(sortByDueDate);
-      return [...todayTasks, ...overdueTasks];
+      return [...noDateTasks, ...todayTasks, ...overdueTasks];
     }
     // otherwise, just sort by dueDate
     return bucket.map(x => x.todo).sort(sortByDueDate);

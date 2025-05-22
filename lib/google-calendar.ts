@@ -97,7 +97,7 @@ export async function getCalendarEvents(
       orderBy: 'startTime'
     });
 
-    return response.data.items as CalendarEvent[];
+return (response.data.items ?? []) as CalendarEvent[];
   } catch (error) {
     console.error('Error fetching calendar events:', error);
     throw error;

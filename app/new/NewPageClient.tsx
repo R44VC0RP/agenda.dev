@@ -89,8 +89,8 @@ const transformCalendarEvent = (event: CalendarEvent) => {
     title: event.summary,
     description: event.description,
     location: event.location,
-    startTime: event.start.dateTime!,
-    endTime: event.end.dateTime!,
+startTime: event.start.dateTime ?? event.start.date ?? '',
+endTime: event.end.dateTime   ?? event.end.date   ?? '',
     organizer: event.creator?.email || '',
     attendees: (event.attendees || []).map(a => ({
       name: a.email.split('@')[0],
@@ -188,8 +188,9 @@ export default function NewPageClient({ initialTodos, initialViewOption }: NewPa
   const { data: session } = useSession()
   const { resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewOption, setViewOption] = useState<ViewOption>(
-    isValidViewOption(initialViewOption) ? initialViewOption : "today"
+  const [viewOption, setViewOption] = usePersistentState<ViewOption>(
+    'new_view_option',
+    isValidViewOption(initialViewOption) ? initialViewOption : 'today'
   )
   const [todos, setTodos] = usePersistentState<Todo[]>('new_todos', initialTodos)
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])

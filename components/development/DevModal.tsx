@@ -119,7 +119,7 @@ export default function DevModal() {
 
   const formatEventDate = (event: CalendarEvent) => {
     const date = event.start.dateTime || event.start.date
-    return new Date(date!).toLocaleString()
+    return date ? new Date(date).toLocaleString() : 'No date available'
   }
 
   const hasGoogleAccount = accounts.some(account => account.provider === 'google')
@@ -162,15 +162,15 @@ export default function DevModal() {
             <div className="rounded-lg border p-4 space-y-2">
               <h3 className="font-medium">Google Calendar Config</h3>
               <div className="space-y-1">
-                <p className="text-sm">
-                  Client ID: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar.clientId}</span>
-                </p>
-                <p className="text-sm">
-                  Client Secret: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar.clientSecret}</span>
-                </p>
-                <p className="text-sm">
-                  Redirect URI: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar.redirectUri}</span>
-                </p>
+ <p className="text-sm">
+   Client ID: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar?.clientId || 'Not configured'}</span>
+ </p>
+ <p className="text-sm">
+   Client Secret: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar?.clientSecret || 'Not configured'}</span>
+ </p>
+ <p className="text-sm">
+   Redirect URI: <span className="text-gray-500 dark:text-gray-400">{settings?.googleCalendar?.redirectUri || 'Not configured'}</span>
+ </p>
               </div>
             </div>
 
