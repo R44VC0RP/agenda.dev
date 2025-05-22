@@ -824,36 +824,78 @@ export default function HomeClient({ initialTodos, usersCount, todosCount }: Hom
     }
     const newDateObj = computeNewDueDate(colIdx, cols);
     const formattedDate = `${newDateObj.getFullYear()}-${String(newDateObj.getMonth() + 1).padStart(2, '0')}-${String(newDateObj.getDate()).padStart(2, '0')}`;
-    const updatedTodo = { ...todo, dueDate: `${formattedDate}T00:00:00.000Z` };
+    const updatedTodo = { 
+      ...todo, 
+      dueDate: `${formattedDate}T00:00:00.000Z`,
+      dateUpdated: new Date().toISOString() // Update the dateUpdated field
+    };
 
-    // Create new array with updated todo
+    // **OPTIMISTIC UPDATE**: Immediately update UI for smooth user experience
     const newTodos = todos.filter(t => t.id !== draggableId);
     newTodos.splice(destination.index, 0, updatedTodo);
-
-    // Update state
     setTodos(newTodos);
 
-    // Log the update
-    console.log(`Todo "${todo.title}" moved to ${destination.droppableId} at index ${destination.index}`);
+    // Store original state for potential rollback
+    const originalTodos = todos;
+    const originalTodo = todo;
 
-    // Update the database after animations finish
+    // Log the update
+    console.log(`✅ Todo "${todo.title}" moved to ${destination.droppableId} at index ${destination.index} (optimistic)`);
+
+    // Update the database with immediate sync (no artificial delay)
     if (session?.user) {
-      dragTimeoutRef.current = window.setTimeout(async () => {
+      // Clear any existing timeout to prevent conflicts
+      if (dragTimeoutRef.current !== null) {
+        clearTimeout(dragTimeoutRef.current);
+        dragTimeoutRef.current = null;
+      }
+
+      // Use requestAnimationFrame to ensure DOM has updated before server sync
+      requestAnimationFrame(async () => {
         try {
           const res = await fetch('/api/todos', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: draggableId, dueDate: updatedTodo.dueDate }),
+            body: JSON.stringify({ 
+              id: draggableId, 
+              dueDate: updatedTodo.dueDate,
+              dateUpdated: updatedTodo.dateUpdated 
+            }),
           });
-          if (!res.ok) throw new Error('Failed to update todo via drag-and-drop');
+          
+          if (!res.ok) {
+            throw new Error(`Server responded with ${res.status}: ${res.statusText}`);
+          }
+          
           const serverTodo = await res.json();
-          setTodos(prev => prev.map(t => t.id === draggableId ? serverTodo : t));
+          
+          // Update with server response to ensure consistency
+          setTodos(prev => prev.map(t => t.id === draggableId ? {
+            ...serverTodo,
+            // Ensure we keep any other local changes that might have happened
+            ...t,
+            // But prioritize server data for core fields
+            dueDate: serverTodo.dueDate,
+            dateUpdated: serverTodo.dateUpdated
+          } : t));
+          
+          console.log(`🔄 Todo "${todo.title}" sync completed with server`);
+          
         } catch (err) {
           console.error('❌ Error updating todo via drag:', err);
+          
+          // **ROLLBACK**: Revert optimistic update on error
+          setTodos(originalTodos);
+          
+          // Show user-friendly error message
+          toast.error(`Failed to move "${originalTodo.title}". Please try again.`);
+          
+          // Optional: Add retry mechanism
+          console.log('🔄 Rolling back to original state due to sync error');
         }
-      }, 350);
+      });
     }
-  }, [isMobile, todos, session?.user]);
+  }, [isMobile, todos, session?.user, computeNewDueDate, setTodos]);
 
   // Check for 'settings=true' query param to auto-open settings dialog
   useEffect(() => {
